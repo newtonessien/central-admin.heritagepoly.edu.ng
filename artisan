@@ -1,0 +1,64 @@
+#!/usr/bin/env php
+<?php
+
+// --- Guard for legacy "route:list --columns" calls (caused by tools/extensions) ---
+if (PHP_SAPI === 'cli' && isset($argv) && \in_array('route:list', $argv, true)) {
+    $before = $argv;
+
+    // Drop "--columns" (with or without value) from argv
+    $filtered = [];
+    for ($i = 0; $i < \count($argv); $i++) {
+        $a = $argv[$i];
+
+        // "--columns=..." form
+        if (\strpos($a, '--columns=') === 0) {
+            continue;
+        }
+
+        // bare "--columns" form + its value (if any)
+        if ($a === '--columns') {
+            // skip this and, if next looks like a value (no leading "--"), skip it too
+            if (isset($argv[$i + 1]) && \strpos($argv[$i + 1], '--') !== 0) {
+                $i++;
+            }
+            continue;
+        }
+
+        $filtered[] = $a;
+    }
+
+    if ($filtered !== $before) {
+        // (optional) log once so you can see who’s calling it
+        @mkdir(__DIR__.'/storage/logs', 0777, true);
+        @file_put_contents(
+            __DIR__.'/storage/logs/route_list_guard.log',
+            json_encode([
+                'ts'         => date('c'),
+                'cwd'        => getcwd(),
+                'argv_before'=> $before,
+                'argv_after' => $filtered,
+                'pid'        => getmypid(),
+            ], JSON_PRETTY_PRINT).PHP_EOL,
+            FILE_APPEND
+        );
+        $argv = $filtered;
+    }
+}
+// --- end guard ---
+
+
+use Illuminate\Foundation\Application;
+use Symfony\Component\Console\Input\ArgvInput;
+
+define('LARAVEL_START', microtime(true));
+
+// Register the Composer autoloader...
+require __DIR__.'/vendor/autoload.php';
+
+// Bootstrap Laravel and handle the command...
+/** @var Application $app */
+$app = require_once __DIR__.'/bootstrap/app.php';
+
+$status = $app->handleCommand(new ArgvInput);
+
+exit($status);
