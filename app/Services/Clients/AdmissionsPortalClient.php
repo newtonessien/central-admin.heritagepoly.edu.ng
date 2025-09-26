@@ -2,6 +2,7 @@
 
 namespace App\Services\Clients;
 
+use Illuminate\Support\Facades\Http;
 use App\Services\Clients\Concerns\CallsRemoteApi;
 
 class AdmissionsPortalClient
@@ -57,6 +58,24 @@ public function getPrograms(int $departmentId, int $programTypeId): array
         ]);
 
     return $resp->json('data') ?? [];
+}
+
+// AdmissionsPortalClient.php
+public function getApplicationTypes()
+{
+    return Http::withToken(config('services.admissions.token'))
+        ->get($this->baseUrl.'/application-types');
+}
+
+
+    // AdmissionsPortalClient.php
+public function changeApplicationType(string $regno, int $applicationTypeId)
+{
+    return Http::withToken(config('services.admissions.token'))
+        ->patch($this->baseUrl.'/candidates/change-application-type', [
+            'regno' => $regno,
+            'application_type_id' => $applicationTypeId,
+        ]);
 }
 
 }

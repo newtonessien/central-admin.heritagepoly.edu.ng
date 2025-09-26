@@ -74,7 +74,9 @@ return [
     'token'    => env('ADMISSIONS_PORTAL_TOKEN'),
 ],
 
-
+    'excluded_application_types' => array_filter(
+        explode(',', env('EXCLUDED_APPLICATION_TYPES', ''))
+    ),
 
 
 

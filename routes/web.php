@@ -3,12 +3,14 @@
 use App\Livewire\Bursary;
 use App\Livewire\Student;
 use App\Livewire\Admission;
-use App\Livewire\AdmittedStudent; // Remove this line if the class does not exist
+use App\Livewire\Admin\Users;
 use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Appearance;
 use Illuminate\Support\Facades\Route;
+use App\Livewire\Admissions\ChangeApplicationType;
 use App\Http\Controllers\Export\CandidateExportController;
+use App\Livewire\AdmittedStudent; // Remove this line if the class does not exist
 
 Route::get('/', function () {
 return view('welcome');
@@ -31,6 +33,14 @@ Route::get('/students', Student::class)->name('students')
 ->middleware('role:student-manager|super-admin');
 Route::get('/bursary', Bursary::class)->name('bursary')
 ->middleware('role:bursary-manager|super-admin');
+
+// User Management Routes
+Route::get('/admin/users', Users::class)
+    ->name('admin.users')
+    ->middleware('role:super-admin');
+Route::get('/admissions/change-application-type', ChangeApplicationType::class)
+->name('admissions.change-application-type')
+->middleware('role:admissions-manager|super-admin');
 
  Route::get('/exports/candidates.xlsx', [CandidateExportController::class, 'excel'])
         ->name('exports.candidates.excel')->middleware('export.filters');

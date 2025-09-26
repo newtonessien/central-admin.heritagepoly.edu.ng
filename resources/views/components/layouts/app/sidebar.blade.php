@@ -17,19 +17,41 @@
 <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
 </flux:navlist.group>
 
+@role('admissions-manager|super-admin')
 <flux:navlist.group heading="Admissions Management" expandable :expanded="false">
 <flux:navlist.item icon="academic-cap" :href="route('admissions')" :current="request()->routeIs('admissions')" wire:navigate>{{ __('Applications') }}</flux:navlist.item>
-<flux:navlist.item icon="academic-cap" :href="route('students.admitted')" :current="request()->routeIs('students.admitted')" wire:navigate>{{ __('Admitted Students') }}</flux:navlist.item>
+<flux:navlist.item icon="user-group" :href="route('students.admitted')" :current="request()->routeIs('students.admitted')" wire:navigate>{{ __('Admitted Students') }}</flux:navlist.item>
+<flux:navlist.item icon="arrow-path-rounded-square" :href="route('admissions.change-application-type')" :current="request()->routeIs('admissions.change-application-type')" wire:navigate>{{ __('Change App. Type') }}</flux:navlist.item>
 </flux:navlist.group>
+@endrole
 
+@role('student-manager|super-admin')
 <flux:navlist.group heading="Student Management" expandable :expanded="false">
 <flux:navlist.item icon="book-open" :href="route('students')" :current="request()->routeIs('students')" wire:navigate>{{ __('Students') }}</flux:navlist.item>
 </flux:navlist.group>
+@endrole
 
-
+@role('bursary-manager|super-admin')
 <flux:navlist.group heading="Bursary Management" expandable :expanded="false">
 <flux:navlist.item icon="credit-card" :href="route('bursary')" :current="request()->routeIs('bursary')" wire:navigate>{{ __('Bursary') }}</flux:navlist.item>
 </flux:navlist.group>
+@endrole
+
+{{-- @role('user-manager|super-admin')
+<flux:navlist.group heading="User Management" expandable :expanded="false">
+<flux:navlist.item icon="users" :href="route('users.create')" :current="request()->routeIs('users.create')" wire:navigate>{{ __('Create Users') }}</flux:navlist.item>
+</flux:navlist.group>
+@endrole --}}
+
+@role('super-admin')
+<flux:navlist.group heading="Administration">
+    <flux:navlist.item icon="users" :href="route('admin.users')" :current="request()->routeIs('admin.users')" wire:navigate>
+        Manage Users
+    </flux:navlist.item>
+</flux:navlist.group>
+@endrole
+
+
 
 </flux:navlist>
 
