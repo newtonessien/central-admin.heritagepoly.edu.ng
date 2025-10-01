@@ -96,7 +96,7 @@ public ?string $selectedProgramName     = null;
     /** Fetch admitted students */
     public function filterStudents(): void
     {
-             logger()->info('FilterStudents called', [
+        logger()->info('FilterStudents called', [
         'program_type_id' => $this->program_type_id,
         'faculty_id'      => $this->faculty_id,
         'department_id'   => $this->department_id,
@@ -199,7 +199,7 @@ public function exportExcel()
         'per_page'        => 1000,
     ]);
 
-    $resp = app(\App\Services\Clients\StudentPortalClient::class)
+    $resp = app(StudentPortalClient::class)
         ->getAdmittedStudents($filters);
 
     $students = $resp['data'] ?? [];
@@ -250,7 +250,7 @@ public function exportPdf()
         'per_page'        => 1000,
     ]);
 
-    $resp = app(\App\Services\Clients\StudentPortalClient::class)
+    $resp = app(StudentPortalClient::class)
         ->getAdmittedStudents($filters);
 
     $students = $resp['data'] ?? [];

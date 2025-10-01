@@ -9,6 +9,7 @@ use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Appearance;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Admissions\ChangeApplicationType;
+use App\Livewire\Admissions\EnrolledStudents\Index;
 use App\Http\Controllers\Export\CandidateExportController;
 use App\Livewire\AdmittedStudent; // Remove this line if the class does not exist
 
@@ -33,6 +34,8 @@ Route::get('/students', Student::class)->name('students')
 ->middleware('role:student-manager|super-admin');
 Route::get('/bursary', Bursary::class)->name('bursary')
 ->middleware('role:bursary-manager|super-admin');
+Route::get('/students/enrolled', Index::class)->name('students.enrolled')
+    ->middleware('role:admissions-manager|super-admin');
 
 // User Management Routes
 Route::get('/admin/users', Users::class)

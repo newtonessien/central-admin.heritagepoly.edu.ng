@@ -22,6 +22,7 @@
 <flux:navlist.item icon="academic-cap" :href="route('admissions')" :current="request()->routeIs('admissions')" wire:navigate>{{ __('Applications') }}</flux:navlist.item>
 <flux:navlist.item icon="user-group" :href="route('students.admitted')" :current="request()->routeIs('students.admitted')" wire:navigate>{{ __('Admitted Students') }}</flux:navlist.item>
 <flux:navlist.item icon="arrow-path-rounded-square" :href="route('admissions.change-application-type')" :current="request()->routeIs('admissions.change-application-type')" wire:navigate>{{ __('Change App. Type') }}</flux:navlist.item>
+<flux:navlist.item icon="book-open" :href="route('students.enrolled')" :current="request()->routeIs('students.enrolled')" wire:navigate>{{ __('Enrolled Students') }}</flux:navlist.item>
 </flux:navlist.group>
 @endrole
 

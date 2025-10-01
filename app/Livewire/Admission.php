@@ -3,11 +3,11 @@ namespace App\Livewire;
 
 use Flux\Flux;
 use Livewire\Component;
-use App\Services\AdmissionsService;
+use App\Services\Clients\AdmissionsPortalClient;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
-use App\Services\AdmissionsStudentPortalClient;
+use App\Services\Clients\StudentPortalClient;
 
 class Admission extends Component
 {
@@ -51,7 +51,7 @@ class Admission extends Component
     // Track filter signature to clear selections when filters change
     protected string $lastFilterKey = '';
 
-    public function mount(AdmissionsService $svc): void
+    public function mount(AdmissionsPortalClient $svc): void
     {
         try {
             $this->programTypes = method_exists($svc, 'getProgramTypes') ? $svc->getProgramTypes() : [];
@@ -92,7 +92,7 @@ class Admission extends Component
         if ($this->faculty_id) {
             $this->loadingDepartments = true;
             try {
-                $svc = app(AdmissionsService::class);
+                $svc = app(AdmissionsPortalClient::class);
                 $this->departments = $svc->getDepartments((int) $this->faculty_id);
             } catch (\Throwable $e) {
                 Log::error('Departments load failed', ['error' => $e->getMessage()]);
@@ -166,7 +166,7 @@ class Admission extends Component
         $this->loadingPrograms = true;
 
         try {
-            $svc = app(AdmissionsService::class);
+            $svc = app(AdmissionsPortalClient::class);
 
             // Support both signatures: getPrograms($dept) or getPrograms($dept, $programType)
             $method = new \ReflectionMethod($svc, 'getPrograms');
@@ -215,7 +215,7 @@ public function filterCandidates(): void
     ], fn ($v) => $v !== null && $v !== '');
 
     try {
-        $svc = app(AdmissionsService::class);
+        $svc = app(AdmissionsPortalClient::class);
 
         $response = method_exists($svc, 'getCandidatesFiltered')
             ? $svc->getCandidatesFiltered($filters)
@@ -314,10 +314,10 @@ public function filterCandidates(): void
     try {
         // 1) Approve on Admissions API (existing behavior)
         //    Make sure approveCandidate() throws on failure or returns truthy.
-        //app(AdmissionsService::class)->approveCandidate($id);
-         //app(AdmissionsService::class)->approveCandidateOrFail($id);
+        //app(AdmissionsPortalClient::class)->approveCandidate($id);
+         //app(AdmissionsPortalClient::class)->approveCandidateOrFail($id);
 
-         app(AdmissionsService::class)->approveAndMigratePhase1($id);
+         app(AdmissionsPortalClient::class)->approveAndMigratePhase1($id);
         // 2) Optimistic UI (your existing code)
         $items = $this->candidates instanceof LengthAwarePaginator ? $this->candidates->items() : $this->candidates;
         foreach ($items as &$row) {
@@ -341,16 +341,16 @@ public function filterCandidates(): void
         // 3) Fetch full migration payload from Admissions and push to Student Portal
         try {
             // Pull the *full* fields needed for migration (user + candidate)
-            $cand = app(AdmissionsService::class)->candidateForMigration($id);
+            $cand = app(AdmissionsPortalClient::class)->candidateForMigration($id);
             // Build the payload Student Portal expects
             $payload = $this->buildStudentMigrationPayload($cand);
 
             // Send to Student Portal
-            $client = new AdmissionsStudentPortalClient();
+            $client = new StudentPortalClient();
             $res = $client->migrateBasic($payload);
 
             // Optional: store migrated_at / student_portal_id if you track them
-            // app(AdmissionsService::class)->markMigrated($id, $res['student_id'] ?? null);
+            // app(AdmissionsPortalClient::class)->markMigrated($id, $res['student_id'] ?? null);
 
             Flux::toast('Approved & migrated to Student Portal.', variant: 'success', position: 'top-right', duration: 4000);
         } catch (\Throwable $m) {
@@ -420,7 +420,7 @@ public function revoke(int $id): void
 
     try {
         // 🔥 revoke in Admissions + delete in Students
-        $result = app(\App\Services\AdmissionsService::class)->revokeAndDeletePhase1($id);
+        $result = app(AdmissionsPortalClient::class)->revokeAndDeletePhase1($id);
 
         if (($result['status'] ?? null) !== 'success') {
             throw new \RuntimeException($result['error'] ?? 'Unknown revoke error');
@@ -513,7 +513,7 @@ public function bulkRevoke(): void
     if (empty($ids)) return;
 
     $this->bulkWorking = true;
-    $svc = app(\App\Services\AdmissionsService::class);
+    $svc = app(AdmissionsPortalClient::class);
 
     $ok = [];
     $fail = [];
@@ -577,7 +577,7 @@ public function bulkApprove(): void
     if (empty($ids)) return;
 
     $this->bulkWorking = true;
-    $svc = app(\App\Services\AdmissionsService::class);
+    $svc = app(AdmissionsPortalClient::class);
 
     $ok = [];
     $fail = [];

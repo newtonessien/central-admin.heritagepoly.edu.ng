@@ -18,16 +18,10 @@ class ChangeApplicationType extends Component
     ];
 
     public function mount(AdmissionsPortalClient $client)
-    {
-       // $this->applicationTypes = $client->getApplicationTypes(); - Heritage
-    $response = $client->getApplicationTypes();
-    if ($response->successful()) {
-    $payload = $response->json();
+{
+    $items = $client->getApplicationTypes();
 
-    // handle both wrapped and unwrapped
-    $items = $payload['data'] ?? $payload;
-
-    $excluded = config('services.excluded_application_types');
+    $excluded = config('services.excluded_application_types', []);
 
     $this->applicationTypes = collect($items)
         ->reject(fn ($type) => in_array((string) ($type['id'] ?? ''), $excluded))
@@ -35,24 +29,22 @@ class ChangeApplicationType extends Component
         ->toArray();
 }
 
-    }
 
 
-    public function update(AdmissionsPortalClient $client)
+public function update(AdmissionsPortalClient $client)
 {
     $this->validate();
 
-   $response = $client->changeApplicationType($this->regno, $this->application_type_id);
-$data = $response->json();
+    $data = $client->changeApplicationType($this->regno, $this->application_type_id);
 
-if ($data['success'] ?? false) {
-    $this->reset(['regno', 'application_type_id']);
-    Flux::toast($data['message'], variant: 'success', position: 'top-right', duration: 4000);
-} else {
-    Flux::toast($data['message'] ?? 'Failed to update application type.', variant: 'warning', position: 'top-right', duration: 4000);
+    if ($data['success'] ?? false) {
+        $this->reset(['regno', 'application_type_id']);
+        Flux::toast($data['message'] ?? 'Application type updated.', variant: 'success', position: 'top-right', duration: 4000);
+    } else {
+        Flux::toast($data['message'] ?? 'Failed to update application type.', variant: 'warning', position: 'top-right', duration: 4000);
+    }
 }
 
-}
 
     public function render()
     {
