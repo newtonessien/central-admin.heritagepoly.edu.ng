@@ -8,9 +8,13 @@ use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Appearance;
 use Illuminate\Support\Facades\Route;
+use App\Livewire\Bursary\StudentFeeReport;
+use App\Livewire\Bursary\OtherPaymentsReport;
+use App\Livewire\Bursary\AdmissionPaymentReport;
 use App\Livewire\Admissions\ChangeApplicationType;
 use App\Livewire\Admissions\EnrolledStudents\Index;
 use App\Http\Controllers\Export\CandidateExportController;
+use App\Http\Controllers\Export\AdmissionPaymentExportController;
 use App\Livewire\AdmittedStudent; // Remove this line if the class does not exist
 
 Route::get('/', function () {
@@ -32,10 +36,25 @@ Route::get('/admissions', Admission::class)->name('admissions')
 ->middleware('role:admissions-manager|super-admin');
 Route::get('/students', Student::class)->name('students')
 ->middleware('role:student-manager|super-admin');
-Route::get('/bursary', Bursary::class)->name('bursary')
-->middleware('role:bursary-manager|super-admin');
+
 Route::get('/students/enrolled', Index::class)->name('students.enrolled')
     ->middleware('role:admissions-manager|super-admin');
+
+     Route::get('/bursary/admission-payment-report', AdmissionPaymentReport::class)
+     ->name('bursary.admission-payment-report')
+     ->middleware('role:bursary-manager|super-admin');
+
+     Route::get('/bursary/student-fee-report', StudentFeeReport::class)
+     ->name('bursary.student-fee-report')->middleware('role:bursary-manager|super-admin');
+
+     Route::get('/bursary/other-payments-report', OtherPaymentsReport::class)
+     ->name('bursary.other-payments-report')
+     ->middleware('role:bursary-manager|super-admin');
+
+ Route::prefix('exports/admissions')->group(function () {
+     Route::get('/payments/export/excel', [AdmissionPaymentExportController::class, 'exportExcel'])->name('exports.admissions.export.excel');
+     Route::get('/payments/export/pdf', [AdmissionPaymentExportController::class, 'exportPdf'])->name('exports.admissions.export.pdf');
+ });
 
 // User Management Routes
 Route::get('/admin/users', Users::class)
@@ -54,8 +73,5 @@ Route::get('/admissions/change-application-type', ChangeApplicationType::class)
 
 
 });
-
-
-
 
 require __DIR__.'/auth.php';

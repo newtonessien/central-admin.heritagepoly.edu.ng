@@ -270,7 +270,25 @@ public function changeApplicationType(string $regno, int $applicationTypeId): ar
     return $resp->json() ?? [];
 }
 
+// Payment Reports
+public function getPaymentReports(array $filters = []): array
+{
+    $resp = $this->httpClient()
+        ->get("{$this->baseUrl}/payments/report", $filters);
 
+    return $resp->json('data') ?? [];
+}
+
+public function exportPaymentReports(array $params)
+{
+    $format = $params['format'] ?? 'excel';
+
+    $response = $this->httpClient()
+        ->withOptions(['stream' => true])
+        ->get("{$this->baseUrl}/payment-reports/export/{$format}", array_filter($params));
+
+    return $response;
+}
 
 
 }

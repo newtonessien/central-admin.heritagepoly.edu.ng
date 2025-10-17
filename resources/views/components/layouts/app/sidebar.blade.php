@@ -34,7 +34,9 @@
 
 @role('bursary-manager|super-admin')
 <flux:navlist.group heading="Bursary Management" expandable :expanded="false">
-<flux:navlist.item icon="credit-card" :href="route('bursary')" :current="request()->routeIs('bursary')" wire:navigate>{{ __('Bursary') }}</flux:navlist.item>
+<flux:navlist.item icon="credit-card" :href="route('bursary.admission-payment-report')" :current="request()->routeIs('bursary.admission-payment-report')" wire:navigate>{{ __('Forms Payment') }}</flux:navlist.item>
+<flux:navlist.item icon="currency-dollar" :href="route('bursary.student-fee-report')" :current="request()->routeIs('bursary.student-fee-report')" wire:navigate>{{ __('Fee Report') }}</flux:navlist.item>
+<flux:navlist.item icon="chart-bar" :href="route('bursary.other-payments-report')" :current="request()->routeIs('bursary.other-payments-report')" wire:navigate>{{ __('Other Payments') }}</flux:navlist.item>
 </flux:navlist.group>
 @endrole
 

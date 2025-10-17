@@ -231,5 +231,55 @@ public function migrateStudentBasic(array $payload): array
 }
 
 
+// /* --------------------
+ // | School Fee Reports
+ // * -------------------*/
+
+    public function getSchoolFeeReports(array $filters): array
+    {
+        $res = $this->httpClient()
+            ->get("{$this->baseUrl}/payments/school-fee-report", $filters)
+            ->throw();
+        return $this->unwrap($res->json());
+          //return $res->json() ?? [];
+    }
+
+
+
+    public function getOtherPaymentsReport(array $params): array
+{
+
+  $res = $this->httpClient()
+            ->get("{$this->baseUrl}/payments/other-payments-report", $params)
+            ->throw();
+
+        return $this->unwrap($res->json());
+          //return $res->json() ?? [];
+
+
+}
+
+public function getServices(?int $programTypeId = null, bool $onlyVisible = true): array
+{
+    $query = [];
+    if ($programTypeId) $query['program_type_id'] = $programTypeId;
+    if ($onlyVisible)   $query['only_visible'] = true;
+
+    try {
+        $res = $this->httpClient()
+            ->get("{$this->baseUrl}/services", $query)
+            ->throw();
+
+        return $this->unwrap($res->json());
+          //return $res->json() ?? [];
+    } catch (\Throwable $e) {
+        report($e);
+        return [];
+    }
+}
+
+
+
+
 
 }

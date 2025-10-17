@@ -36,7 +36,7 @@
 
     {{-- Repeating header content --}}
 <header>
-  <div class="hdr-line-1">{{ $hdr['school'] ?? 'Heritage Polytechnic' }}</div>
+  <div class="hdr-line-1">{{ $hdr['school'] ?? 'University of Uyo' }}</div>
   @if(!empty($hdr['faculty']))    <div class="hdr-line-2">{{ $hdr['faculty'] }}</div>@endif
   @if(!empty($hdr['department'])) <div class="hdr-line-3">{{ $hdr['department'] }}</div>@endif
   @if(!empty($hdr['program']))    <div class="hdr-line-4">{{ $hdr['program'] }}</div>@endif
