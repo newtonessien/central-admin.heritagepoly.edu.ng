@@ -8,7 +8,9 @@ use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Appearance;
 use Illuminate\Support\Facades\Route;
+use App\Livewire\Bursary\ApprovePayment;
 use App\Livewire\Bursary\StudentFeeReport;
+use App\Livewire\Bursary\ConfirmPaymentRef;
 use App\Livewire\Bursary\OtherPaymentsReport;
 use App\Livewire\Bursary\AdmissionPaymentReport;
 use App\Livewire\Admissions\ChangeApplicationType;
@@ -50,6 +52,14 @@ Route::get('/students/enrolled', Index::class)->name('students.enrolled')
      Route::get('/bursary/other-payments-report', OtherPaymentsReport::class)
      ->name('bursary.other-payments-report')
      ->middleware('role:bursary-manager|super-admin');
+
+        Route::get('/bursary/approve-payment', ApprovePayment::class)
+    ->name('bursary.approve-payment')
+    ->middleware('role:bursary-manager|super-admin');
+
+       Route::get('/bursary/confirm-payment-ref', ConfirmPaymentRef::class)
+        ->name('bursary.confirm-payment-ref')
+        ->middleware('role:bursary-manager|super-admin');
 
  Route::prefix('exports/admissions')->group(function () {
      Route::get('/payments/export/excel', [AdmissionPaymentExportController::class, 'exportExcel'])->name('exports.admissions.export.excel');

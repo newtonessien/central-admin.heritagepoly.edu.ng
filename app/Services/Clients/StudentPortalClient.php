@@ -279,6 +279,74 @@ public function getServices(?int $programTypeId = null, bool $onlyVisible = true
 }
 
 
+public function createApprovedPayment(array $data)
+{
+$res = $this->httpClient()->post("{$this->baseUrl}/payments/approved-payments", $data);
+
+        if ($res->failed()) {
+            Log::error('ApprovedPayment create failed', [
+                'status' => $res->status(),
+                'body'   => $res->json(),
+            ]);
+            throw new \Exception('Failed to create approved payment. See logs.');
+        }
+
+        return $res->json();
+    }
+
+
+  /**
+     * ✅ 1. Get all approved payments by student's regno
+     */
+
+public function getApprovedPaymentsByRegno(string $regno): array
+{
+    $response = $this->httpClient()->get("{$this->baseUrl}/payments/approved-payments/{$regno}");
+    $json = $response->json() ?? [];
+
+    if (isset($json['data']) && is_array($json['data'])) {
+        return $json['data'];
+    }
+
+    return is_array($json) ? $json : [];
+}
+
+
+
+    /**
+     * ✅ 2. Update an approved payment (only if unpaid)
+     */
+    public function updateApprovedPayment(int $id, array $payload): array
+    {
+        $resp = $this->httpClient()->put("{$this->baseUrl}/payments/approved-payments/{$id}", $payload);
+        return $resp->json() ?? [];
+    }
+
+    /**
+     * ✅ 3. Delete an approved payment (only if unpaid)
+     */
+    public function deleteApprovedPayment(int $id): array
+    {
+        $resp = $this->httpClient()->delete("{$this->baseUrl}/payments/approved-payments/{$id}");
+        return $resp->json() ?? [];
+    }
+
+
+        public function getPaymentByTransRef(string $transRef): ?array
+    {
+        try {
+            $res = $this->httpClient()->get("{$this->baseUrl}/payments/payment-by-trans-ref", [
+                'trans_refno' => $transRef
+            ])->throw();
+
+            return $res->json('data');
+        } catch (RequestException $e) {
+            Log::error('Failed to fetch payment by ref: '.$e->getMessage());
+            return null;
+        }
+    }
+
+
 
 
 

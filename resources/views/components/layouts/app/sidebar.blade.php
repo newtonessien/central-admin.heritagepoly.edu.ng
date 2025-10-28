@@ -37,6 +37,8 @@
 <flux:navlist.item icon="credit-card" :href="route('bursary.admission-payment-report')" :current="request()->routeIs('bursary.admission-payment-report')" wire:navigate>{{ __('Forms Payment') }}</flux:navlist.item>
 <flux:navlist.item icon="currency-dollar" :href="route('bursary.student-fee-report')" :current="request()->routeIs('bursary.student-fee-report')" wire:navigate>{{ __('Fee Report') }}</flux:navlist.item>
 <flux:navlist.item icon="chart-bar" :href="route('bursary.other-payments-report')" :current="request()->routeIs('bursary.other-payments-report')" wire:navigate>{{ __('Other Payments') }}</flux:navlist.item>
+<flux:navlist.item icon="check-circle" :href="route('bursary.approve-payment')" :current="request()->routeIs('bursary.approve-payment')" wire:navigate>{{ __('Manage Payments') }}</flux:navlist.item>
+<flux:navlist.item icon="document-magnifying-glass" :href="route('bursary.confirm-payment-ref')" :current="request()->routeIs('bursary.confirm-payment-ref')" wire:navigate>{{ __('Confirm TransRef') }}</flux:navlist.item>
 </flux:navlist.group>
 @endrole
 

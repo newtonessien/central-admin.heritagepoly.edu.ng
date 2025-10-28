@@ -263,6 +263,23 @@ Loading programs…
                 <span wire:loading.remove wire:target="bulkRevoke">Revoke Selected ({{ count($selected) }})</span>
                 <span wire:loading wire:target="bulkRevoke">Working…</span>
             </flux:button>
+
+        <flux:button
+            variant="subtle"
+            icon="arrow-down-tray"
+            size="sm"
+            class="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+            wire:click="downloadMultipleCredentials"
+            wire:target="downloadMultipleCredentials"
+            wire:loading.attr="disabled"
+            :disabled="count($selected) === 0"
+        >
+            <span wire:loading.remove wire:target="downloadMultipleCredentials">
+                Download Credentials ({{ count($selected) }})
+            </span>
+            <span wire:loading wire:target="downloadMultipleCredentials">Preparing…</span>
+        </flux:button>
+
         </div>
     @endif
 </div>

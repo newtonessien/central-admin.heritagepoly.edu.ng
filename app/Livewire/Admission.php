@@ -3,11 +3,12 @@ namespace App\Livewire;
 
 use Flux\Flux;
 use Livewire\Component;
-use App\Services\Clients\AdmissionsPortalClient;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use App\Services\Clients\StudentPortalClient;
+use Illuminate\Pagination\LengthAwarePaginator;
+use App\Services\Clients\AdmissionsPortalClient;
 
 class Admission extends Component
 {
@@ -696,7 +697,85 @@ public function updatedLocalSearch(): void
       $this->selected  = [];
 }
 
+// bulk file download
+public function downloadMultipleCredentials()
+{
+    if (empty($this->selected)) {
+        Flux::toast('Please select at least one candidate', variant: 'warning', position: 'top-right', duration: 4000);
+        return;
+    }
 
+    $selectedCandidates = collect($this->filteredCandidates)
+        ->whereIn('id', $this->selected)
+        ->filter(fn ($c) => !empty($c['credentials_pdf_url']))
+        ->values();
+
+    if ($selectedCandidates->isEmpty()) {
+        Flux::toast('No credentials found for the selected candidates', variant: 'warning', position: 'top-right', duration: 4000);
+        return;
+    }
+
+
+    $zipFileName = 'candidate_credentials_' . now()->format('Ymd_His') . '.zip';
+    $tempZipPath = sys_get_temp_dir() . '/' . $zipFileName;
+
+    $zip = new \ZipArchive;
+    if ($zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+        Flux::toast('Failed to create ZIP file', variant: 'error', position: 'top-right', duration: 4000);
+        return;
+    }
+
+    $successCount = 0;
+    foreach ($selectedCandidates as $candidate) {
+        $fileUrl = $candidate['credentials_pdf_url'];
+        $name = Str::slug($candidate['name'] ?? 'candidate') . '_' . ($candidate['regno'] ?? 'unknown') . '.pdf';
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(30)->get($fileUrl);
+            if ($response->successful()) {
+                $zip->addFromString($name, $response->body());
+                $successCount++;
+            }
+        } catch (\Exception $e) {
+            Log::warning("Failed to download file for candidate {$candidate['id']}: {$e->getMessage()}");
+            continue;
+        }
+    }
+
+    $zip->close();
+
+    if ($successCount === 0) {
+        unlink($tempZipPath);
+        Flux::toast('Failed to download any credential files', variant: 'error', position: 'top-right', duration: 4000);
+        return;
+    }
+
+    // Ensure public temp directory exists
+    $publicTempDir = storage_path('app/public/temp');
+    if (!file_exists($publicTempDir)) {
+        mkdir($publicTempDir, 0755, true);
+    }
+
+    // Move to public storage
+    $finalZipPath = $publicTempDir . '/' . $zipFileName;
+    if (!copy($tempZipPath, $finalZipPath)) {
+        Flux::toast('Failed to prepare download file', variant: 'error', position: 'top-right', duration: 4000);
+        return;
+    }
+
+    // Clean up temp file
+    unlink($tempZipPath);
+
+    $publicUrl = url("storage/temp/{$zipFileName}");
+
+    Log::info("ZIP created with {$successCount} files. URL: {$publicUrl}");
+
+    // Redirect to download
+    return redirect($publicUrl);
+
+
+
+}
 
 
     public function render()
