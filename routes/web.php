@@ -4,6 +4,7 @@ use App\Livewire\Bursary;
 use App\Livewire\Student;
 use App\Livewire\Admission;
 use App\Livewire\Admin\Users;
+use App\Livewire\Bursary\FeeItem;
 use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Appearance;
@@ -15,6 +16,7 @@ use App\Livewire\Bursary\OtherPaymentsReport;
 use App\Livewire\Bursary\AdmissionPaymentReport;
 use App\Livewire\Admissions\ChangeApplicationType;
 use App\Livewire\Admissions\EnrolledStudents\Index;
+use App\Livewire\Bursary\ProgramTypeFeeItemAmountManager;
 use App\Http\Controllers\Export\CandidateExportController;
 use App\Http\Controllers\Export\AdmissionPaymentExportController;
 use App\Livewire\AdmittedStudent; // Remove this line if the class does not exist
@@ -60,6 +62,14 @@ Route::get('/students/enrolled', Index::class)->name('students.enrolled')
        Route::get('/bursary/confirm-payment-ref', ConfirmPaymentRef::class)
         ->name('bursary.confirm-payment-ref')
         ->middleware('role:bursary-manager|super-admin');
+
+             Route::get('/bursary/fee-item', FeeItem::class)
+    ->name('bursary.fee-item')
+    ->middleware('role:bursary-manager|super-admin');
+
+    Route::get('/bursary/program-type-fee-item-amount', ProgramTypeFeeItemAmountManager::class)
+    ->name('bursary.program-type-fee-item-amount')
+    ->middleware('role:bursary-manager|super-admin');
 
  Route::prefix('exports/admissions')->group(function () {
      Route::get('/payments/export/excel', [AdmissionPaymentExportController::class, 'exportExcel'])->name('exports.admissions.export.excel');

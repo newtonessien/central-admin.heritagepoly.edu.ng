@@ -278,6 +278,22 @@ public function getServices(?int $programTypeId = null, bool $onlyVisible = true
     }
 }
 
+public function getLevels(?int $year_of_study = null): array
+{
+    $query = [];
+    if ($year_of_study) $query['year_of_study'] = $year_of_study;
+    try {
+        $res = $this->httpClient()
+            ->get("{$this->baseUrl}/levels", $query)
+            ->throw();
+
+        return $this->unwrap($res->json());
+    } catch (\Throwable $e) {
+        report($e);
+        return [];
+    }
+}
+
 
 public function createApprovedPayment(array $data)
 {
@@ -346,6 +362,253 @@ public function getApprovedPaymentsByRegno(string $regno): array
         }
     }
 
+
+     /**
+     * ✅ 3. Fee Item Reports
+     */
+
+    //    public function fetchFeeItems(array $params = [])
+    // {
+    //     return $this->httpClient()->get("{$this->baseUrl}/fees/items", $params)->throw()->json();
+    // }
+
+    public function fetchFeeItems(array $params = [])
+{
+    try {
+        // Defaults for pagination if not provided
+        $defaults = [
+            'page' => $params['page'] ?? 1,
+            'per_page' => $params['per_page'] ?? 40,
+            'search' => $params['search'] ?? null,
+        ];
+
+        // Merge and clean empty params
+        $query = array_filter(array_merge($defaults, $params), fn($v) => $v !== null && $v !== '');
+
+        $response = $this->httpClient()
+            ->get("{$this->baseUrl}/fees/items", $query)
+            ->throw()
+            ->json();
+
+        // ✅ Normalize response for Livewire (ensure both data + meta exist)
+        return [
+            'data' => $response['data'] ?? [],
+            'meta' => $response['meta'] ?? [
+                'current_page' => 1,
+                'per_page' => count($response['data'] ?? []),
+                'last_page' => 1,
+                'total' => count($response['data'] ?? []),
+            ],
+        ];
+
+    } catch (\Throwable $e) {
+        Log::error('Failed to fetch fee items', ['error' => $e->getMessage()]);
+        return [
+            'data' => [],
+            'meta' => [
+                'current_page' => 1,
+                'per_page' => 0,
+                'last_page' => 1,
+                'total' => 0,
+            ],
+        ];
+    }
+}
+
+
+    public function createFeeItem(array $payload)
+    {
+        return $this->httpClient()->post("{$this->baseUrl}/fees/items", $payload)->throw()->json();
+    }
+
+    public function updateFeeItem(int $id, array $payload)
+    {
+        return $this->httpClient()->put("{$this->baseUrl}/fees/items/{$id}", $payload)->throw()->json();
+    }
+
+    public function deleteFeeItem(int $id)
+    {
+        return $this->httpClient()->delete("{$this->baseUrl}/fees/items/{$id}")->throw()->status() === 200;
+    }
+
+        /**
+     * Fee item categories
+     */
+    public function fetchFeeItemCategories(array $params = []): array
+    {
+        try {
+            $res = $this->httpClient()
+                ->get("{$this->baseUrl}/fee-item-categories", $params)
+                ->throw();
+
+            // If API returns { data: [...] } keep it consistent
+            return $res->json() ?? ['data' => []];
+        } catch (\Throwable $e) {
+            Log::error('fetchFeeItemCategories failed', ['msg' => $e->getMessage()]);
+            return ['data' => []];
+        }
+    }
+
+    public function fetchFeeItemCategory(int $id): array
+    {
+        try {
+            $res = $this->httpClient()
+                ->get("{$this->baseUrl}/fee-item-categories/{$id}")
+                ->throw();
+
+            return $res->json() ?? [];
+        } catch (\Throwable $e) {
+            Log::error('fetchFeeItemCategory failed', ['id' => $id, 'msg' => $e->getMessage()]);
+            return [];
+        }
+    }
+
+    public function createFeeItemCategory(array $payload): array
+    {
+        $res = $this->httpClient()->post("{$this->baseUrl}/fee-item-categories", $payload)->throw();
+        return $res->json();
+    }
+
+    public function updateFeeItemCategory(int $id, array $payload): array
+    {
+        $res = $this->httpClient()->put("{$this->baseUrl}/fee-item-categories/{$id}", $payload)->throw();
+        return $res->json();
+    }
+
+    public function deleteFeeItemCategory(int $id): bool
+    {
+        $res = $this->httpClient()->delete("{$this->baseUrl}/fee-item-categories/{$id}")->throw();
+        return $res->status() === 200;
+    }
+
+
+    /**
+ * Program type fee item amounts (PTFIA) — client methods
+ */
+
+/**
+ * Fetch paginated program_type_fee_item_amounts
+ * Accepts filters: program_type_id, fee_item_id, faculty_id, department_id, level_id, page, per_page, search
+ */
+public function fetchProgramTypeFeeItemAmounts(array $params = []): array
+{
+    try {
+        $defaults = [
+            'page' => $params['page'] ?? 1,
+            'per_page' => $params['per_page'] ?? 10,
+            'search' => $params['search'] ?? null,
+        ];
+        $query = array_filter(array_merge($defaults, $params), fn($v) => $v !== null && $v !== '');
+
+        $res = $this->httpClient()
+            ->get("{$this->baseUrl}/program-type-fee-item-amounts/", $query)
+            ->throw();
+
+        $json = $res->json();
+
+        return [
+            'data' => $json['data'] ?? [],
+            'meta' => $json['meta'] ?? [
+                'current_page' => 1,
+                'per_page' => count($json['data'] ?? []),
+                'last_page' => 1,
+                'total' => count($json['data'] ?? []),
+            ],
+        ];
+    } catch (\Throwable $e) {
+        Log::error('fetchProgramTypeFeeItemAmounts failed', ['error' => $e->getMessage(), 'params' => $params]);
+        return [
+            'data' => [],
+            'meta' => ['current_page' => 1, 'per_page' => 0, 'last_page' => 1, 'total' => 0],
+        ];
+    }
+}
+
+
+/**
+ * Fetch single program_type_fee_item_amount by id (show)
+ */
+public function fetchProgramTypeFeeItemAmount(int $id): array
+{
+    try {
+        $res = $this->httpClient()
+            ->get("{$this->baseUrl}/program-type-fee-item-amounts/{$id}")
+            ->throw();
+
+        return $res->json() ?? [];
+    } catch (\Throwable $e) {
+        Log::error('fetchProgramTypeFeeItemAmount failed', ['id' => $id, 'error' => $e->getMessage()]);
+        return [];
+    }
+}
+
+/**
+ * Create a program_type_fee_item_amount
+ * Expected payload:
+ *  - program_type_id (int)
+ *  - fee_item_id (int)
+ *  - faculty_id (int|null)
+ *  - department_id (int|null)
+ *  - level_id (int|null)
+ *  - first_semester_amount (decimal)
+ *  - second_semester_amount (decimal)
+ */
+public function createProgramTypeFeeItemAmount(array $payload): array
+{
+    try {
+        $res = $this->httpClient()
+            ->post("{$this->baseUrl}/program-type-fee-item-amounts", $payload)
+            ->throw();
+
+        return $res->json() ?? [];
+    } catch (\Illuminate\Http\Client\RequestException $e) {
+        Log::warning('createProgramTypeFeeItemAmount validation error', ['payload' => $payload, 'resp' => $e->response?->body()]);
+        // bubble useful payload back for UI parsing
+        throw $e;
+    } catch (\Throwable $e) {
+        Log::error('createProgramTypeFeeItemAmount failed', ['error' => $e->getMessage(), 'payload' => $payload]);
+        throw $e;
+    }
+}
+
+
+/**
+ * Update program_type_fee_item_amount
+ */
+public function updateProgramTypeFeeItemAmount(int $id, array $payload): array
+{
+    try {
+        $res = $this->httpClient()
+            ->put("{$this->baseUrl}/program-type-fee-item-amounts/{$id}", $payload)
+            ->throw();
+
+        return $res->json() ?? [];
+    } catch (\Illuminate\Http\Client\RequestException $e) {
+        Log::warning('updateProgramTypeFeeItemAmount validation error', ['id' => $id, 'payload' => $payload, 'resp' => $e->response?->body()]);
+        throw $e;
+    } catch (\Throwable $e) {
+        Log::error('updateProgramTypeFeeItemAmount failed', ['id' => $id, 'error' => $e->getMessage(), 'payload' => $payload]);
+        throw $e;
+    }
+}
+
+
+/**
+ * Delete program_type_fee_item_amount
+ */
+public function deleteProgramTypeFeeItemAmount(int $id): bool
+{
+    try {
+        $res = $this->httpClient()
+            ->delete("{$this->baseUrl}/program-type-fee-item-amounts/{$id}")
+            ->throw();
+
+        return $res->status() === 200 || $res->status() === 204;
+    } catch (\Throwable $e) {
+        Log::error('deleteProgramTypeFeeItemAmount failed', ['id' => $id, 'error' => $e->getMessage()]);
+        return false;
+    }
+}
 
 
 
