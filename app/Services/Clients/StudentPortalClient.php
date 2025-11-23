@@ -610,6 +610,59 @@ public function deleteProgramTypeFeeItemAmount(int $id): bool
     }
 }
 
+   /**
+     * Fetch Consultant Commission (School Fees Only — No Study Centres)
+     */
+ public function fetchConsultantSchoolFees(array $filters = []): array
+{
+    try {
+        $res = $this->httpClient()
+            ->get("{$this->baseUrl}/payments/commissions/consultant/school-fees", $filters)
+            ->throw();
+
+        return $res->json() ?? [];
+    } catch (\Throwable $e) {
+        Log::error('Failed fetching consultant school fees', [
+            'error' => $e->getMessage(),
+            'filters' => $filters
+        ]);
+        return [];
+    }
+}
+
+     /**
+     * Fetch Full Study Centre Report (Centres + Consultant)
+     */
+public function fetchStudyCenterSummary(array $filters = []): array
+{
+    try {
+        $res = $this->httpClient()
+            ->get("{$this->baseUrl}/payments/commissions/study-centers/summary", $filters)
+            ->throw();
+
+        return $res->json() ?? [];
+    } catch (\Throwable $e) {
+        Log::error('Failed fetching study center summary', [
+            'error' => $e->getMessage(),
+            'filters' => $filters
+        ]);
+        return [];
+    }
+}
+
+public function fetchStudyCenters(): array
+{
+    try {
+        $res = $this->httpClient()
+            ->get("{$this->baseUrl}/study-centers")
+            ->throw();
+        return $res->json()['data'] ?? [];
+    } catch (\Throwable $e) {
+        Log::error('Failed fetching study centers', ['error' => $e->getMessage()]);
+        return [];
+    }
+}
+
 
 
 

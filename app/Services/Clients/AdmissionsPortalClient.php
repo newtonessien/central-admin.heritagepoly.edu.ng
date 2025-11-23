@@ -290,5 +290,24 @@ public function exportPaymentReports(array $params)
     return $response;
 }
 
+public function fetchAdmissionStudyCenterSummary(array $filters = []): array
+{
+    try {
+        $res = $this->httpClient()
+            ->get("{$this->baseUrl}/payments/commissions/study-centers", $filters)
+            ->throw();
+
+        return $res->json() ?? [];
+    } catch (\Throwable $e) {
+        Log::error('fetchAdmissionStudyCenterSummary failed', [
+            'filters' => $filters,
+            'error' => $e->getMessage()
+        ]);
+
+        return [];
+    }
+}
+
+
 
 }

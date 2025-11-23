@@ -44,18 +44,21 @@
 </flux:navlist.group>
 @endrole
 
-{{-- @role('user-manager|super-admin')
-<flux:navlist.group heading="User Management" expandable :expanded="false">
-<flux:navlist.item icon="users" :href="route('users.create')" :current="request()->routeIs('users.create')" wire:navigate>{{ __('Create Users') }}</flux:navlist.item>
+@role('super-admin')
+<flux:navlist.group heading="Portal Commission" expandable :expanded="false">
+<flux:navlist.item icon="presentation-chart-bar" :href="route('bursary.consultant-school-fees-report')" :current="request()->routeIs('bursary.consultant-school-fees-report')" wire:navigate>{{ __('Regular') }}</flux:navlist.item>
+    <flux:navlist.item icon="circle-stack" :href="route('bursary.study-center-summary-report')" :current="request()->routeIs('bursary.study-center-summary-report')" wire:navigate>{{ __('e-Learning') }}</flux:navlist.item>
 </flux:navlist.group>
-@endrole --}}
+@endrole
 
 @role('super-admin')
 <flux:navlist.group heading="Administration">
     <flux:navlist.item icon="users" :href="route('admin.users')" :current="request()->routeIs('admin.users')" wire:navigate>
         Manage Users
     </flux:navlist.item>
+
 </flux:navlist.group>
+
 @endrole
 
 

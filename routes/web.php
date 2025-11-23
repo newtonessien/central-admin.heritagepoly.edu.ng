@@ -16,9 +16,11 @@ use App\Livewire\Bursary\OtherPaymentsReport;
 use App\Livewire\Bursary\AdmissionPaymentReport;
 use App\Livewire\Admissions\ChangeApplicationType;
 use App\Livewire\Admissions\EnrolledStudents\Index;
+use App\Livewire\Bursary\ConsultantSchoolFeesReport;
 use App\Livewire\Bursary\ProgramTypeFeeItemAmountManager;
 use App\Http\Controllers\Export\CandidateExportController;
 use App\Http\Controllers\Export\AdmissionPaymentExportController;
+use App\Livewire\Bursary\StudyCenterSummaryReport;
 use App\Livewire\AdmittedStudent; // Remove this line if the class does not exist
 
 Route::get('/', function () {
@@ -42,54 +44,62 @@ Route::get('/students', Student::class)->name('students')
 ->middleware('role:student-manager|super-admin');
 
 Route::get('/students/enrolled', Index::class)->name('students.enrolled')
-    ->middleware('role:admissions-manager|super-admin');
+->middleware('role:admissions-manager|super-admin');
 
-     Route::get('/bursary/admission-payment-report', AdmissionPaymentReport::class)
-     ->name('bursary.admission-payment-report')
-     ->middleware('role:bursary-manager|super-admin');
+Route::get('/bursary/admission-payment-report', AdmissionPaymentReport::class)
+->name('bursary.admission-payment-report')
+->middleware('role:bursary-manager|super-admin');
 
-     Route::get('/bursary/student-fee-report', StudentFeeReport::class)
-     ->name('bursary.student-fee-report')->middleware('role:bursary-manager|super-admin');
+Route::get('/bursary/student-fee-report', StudentFeeReport::class)
+->name('bursary.student-fee-report')->middleware('role:bursary-manager|super-admin');
 
-     Route::get('/bursary/other-payments-report', OtherPaymentsReport::class)
-     ->name('bursary.other-payments-report')
-     ->middleware('role:bursary-manager|super-admin');
+Route::get('/bursary/other-payments-report', OtherPaymentsReport::class)
+->name('bursary.other-payments-report')
+->middleware('role:bursary-manager|super-admin');
 
-        Route::get('/bursary/approve-payment', ApprovePayment::class)
-    ->name('bursary.approve-payment')
-    ->middleware('role:bursary-manager|super-admin');
+Route::get('/bursary/approve-payment', ApprovePayment::class)
+->name('bursary.approve-payment')
+->middleware('role:bursary-manager|super-admin');
 
-       Route::get('/bursary/confirm-payment-ref', ConfirmPaymentRef::class)
-        ->name('bursary.confirm-payment-ref')
-        ->middleware('role:bursary-manager|super-admin');
+Route::get('/bursary/confirm-payment-ref', ConfirmPaymentRef::class)
+->name('bursary.confirm-payment-ref')
+->middleware('role:bursary-manager|super-admin');
 
-             Route::get('/bursary/fee-item', FeeItem::class)
-    ->name('bursary.fee-item')
-    ->middleware('role:bursary-manager|super-admin');
+Route::get('/bursary/fee-item', FeeItem::class)
+->name('bursary.fee-item')
+->middleware('role:bursary-manager|super-admin');
 
-    Route::get('/bursary/program-type-fee-item-amount', ProgramTypeFeeItemAmountManager::class)
-    ->name('bursary.program-type-fee-item-amount')
-    ->middleware('role:bursary-manager|super-admin');
+Route::get('/bursary/program-type-fee-item-amount', ProgramTypeFeeItemAmountManager::class)
+->name('bursary.program-type-fee-item-amount')
+->middleware('role:bursary-manager|super-admin');
 
- Route::prefix('exports/admissions')->group(function () {
-     Route::get('/payments/export/excel', [AdmissionPaymentExportController::class, 'exportExcel'])->name('exports.admissions.export.excel');
-     Route::get('/payments/export/pdf', [AdmissionPaymentExportController::class, 'exportPdf'])->name('exports.admissions.export.pdf');
- });
+Route::get('/bursary/consultant-school-fees-report', ConsultantSchoolFeesReport::class)
+->name('bursary.consultant-school-fees-report')
+->middleware('role:super-admin');
+
+Route::get('/bursary/study-center-summary-report', StudyCenterSummaryReport::class)
+->name('bursary.study-center-summary-report')
+->middleware('role:super-admin');
+
+Route::prefix('exports/admissions')->group(function () {
+Route::get('/payments/export/excel', [AdmissionPaymentExportController::class, 'exportExcel'])->name('exports.admissions.export.excel');
+Route::get('/payments/export/pdf', [AdmissionPaymentExportController::class, 'exportPdf'])->name('exports.admissions.export.pdf');
+});
 
 // User Management Routes
 Route::get('/admin/users', Users::class)
-    ->name('admin.users')
-    ->middleware('role:super-admin');
+->name('admin.users')
+->middleware('role:super-admin');
 Route::get('/admissions/change-application-type', ChangeApplicationType::class)
 ->name('admissions.change-application-type')
 ->middleware('role:admissions-manager|super-admin');
 
- Route::get('/exports/candidates.xlsx', [CandidateExportController::class, 'excel'])
-        ->name('exports.candidates.excel')->middleware('export.filters');
-    Route::get('/exports/candidates.csv', [CandidateExportController::class, 'csv'])
-        ->name('exports.candidates.csv')->middleware('export.filters');
-    Route::get('/exports/candidates.pdf', [CandidateExportController::class, 'pdf'])
-        ->name('exports.candidates.pdf')->middleware('export.filters');
+Route::get('/exports/candidates.xlsx', [CandidateExportController::class, 'excel'])
+->name('exports.candidates.excel')->middleware('export.filters');
+Route::get('/exports/candidates.csv', [CandidateExportController::class, 'csv'])
+->name('exports.candidates.csv')->middleware('export.filters');
+Route::get('/exports/candidates.pdf', [CandidateExportController::class, 'pdf'])
+->name('exports.candidates.pdf')->middleware('export.filters');
 
 
 });
