@@ -664,6 +664,18 @@ public function fetchStudyCenters(): array
 }
 
 
+public function resetEmail(string $userId, string $email): array
+{
+    $resp = $this->httpClient()
+        ->post("{$this->baseUrl}/students/reset-email", [
+            'user_id' => $userId,
+            'email'   => $email,
+        ]);
+
+    return $resp->json() ?? [];
+}
+
+
 
 
 }

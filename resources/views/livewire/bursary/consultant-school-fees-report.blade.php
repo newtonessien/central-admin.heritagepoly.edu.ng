@@ -44,7 +44,7 @@
 
             {{-- Optional Export Button --}}
             <div class="mt-4 flex justify-end">
-                <button wire:click="export"
+                <button
                         class="bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded shadow-md transition">
                     Report for the Period - {{ date('d-M-Y', strtotime($start_date)) }} to {{ date('d-M-Y', strtotime($end_date)) }}
                 </button>

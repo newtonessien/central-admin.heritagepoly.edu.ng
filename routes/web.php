@@ -12,15 +12,16 @@ use Illuminate\Support\Facades\Route;
 use App\Livewire\Bursary\ApprovePayment;
 use App\Livewire\Bursary\StudentFeeReport;
 use App\Livewire\Bursary\ConfirmPaymentRef;
+use App\Livewire\Students\ResetStudentEmail;
 use App\Livewire\Bursary\OtherPaymentsReport;
 use App\Livewire\Bursary\AdmissionPaymentReport;
 use App\Livewire\Admissions\ChangeApplicationType;
+use App\Livewire\Bursary\StudyCenterSummaryReport;
 use App\Livewire\Admissions\EnrolledStudents\Index;
 use App\Livewire\Bursary\ConsultantSchoolFeesReport;
 use App\Livewire\Bursary\ProgramTypeFeeItemAmountManager;
 use App\Http\Controllers\Export\CandidateExportController;
 use App\Http\Controllers\Export\AdmissionPaymentExportController;
-use App\Livewire\Bursary\StudyCenterSummaryReport;
 use App\Livewire\AdmittedStudent; // Remove this line if the class does not exist
 
 Route::get('/', function () {
@@ -93,6 +94,9 @@ Route::get('/admin/users', Users::class)
 Route::get('/admissions/change-application-type', ChangeApplicationType::class)
 ->name('admissions.change-application-type')
 ->middleware('role:admissions-manager|super-admin');
+
+Route::get('/students/reset-email', ResetStudentEmail::class)->name('students.reset-email')
+->middleware('role:student-manager|super-admin');
 
 Route::get('/exports/candidates.xlsx', [CandidateExportController::class, 'excel'])
 ->name('exports.candidates.excel')->middleware('export.filters');

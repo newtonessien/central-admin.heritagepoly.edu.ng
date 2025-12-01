@@ -28,7 +28,15 @@
 
 @role('student-manager|super-admin')
 <flux:navlist.group heading="Student Management" expandable :expanded="false">
-<flux:navlist.item icon="book-open" :href="route('students')" :current="request()->routeIs('students')" wire:navigate>{{ __('Students') }}</flux:navlist.item>
+{{-- <flux:navlist.item icon="book-open" :href="route('students')" :current="request()->routeIs('students')" wire:navigate>{{ __('Students') }}</flux:navlist.item> --}}
+<flux:navlist.item icon="envelope-open" :href="route('students.reset-email')" :current="request()->routeIs('students.reset-email')" wire:navigate>{{ __('Reset Email') }}</flux:navlist.item>
+</flux:navlist.group>
+@endrole
+
+@role('student-manager|super-admin')
+<flux:navlist.group heading="Student Management" expandable :expanded="false">
+{{-- <flux:navlist.item icon="book-open" :href="route('students')" :current="request()->routeIs('students')" wire:navigate>{{ __('Students') }}</flux:navlist.item> --}}
+<flux:navlist.item icon="envelope-open" :href="route('students.reset-email')" :current="request()->routeIs('students.reset-email')" wire:navigate>{{ __('Reset Email') }}</flux:navlist.item>
 </flux:navlist.group>
 @endrole
 
