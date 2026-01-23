@@ -23,21 +23,25 @@
 <flux:navlist.item icon="user-group" :href="route('students.admitted')" :current="request()->routeIs('students.admitted')" wire:navigate>{{ __('Admitted Students') }}</flux:navlist.item>
 <flux:navlist.item icon="arrow-path-rounded-square" :href="route('admissions.change-application-type')" :current="request()->routeIs('admissions.change-application-type')" wire:navigate>{{ __('Change App. Type') }}</flux:navlist.item>
 <flux:navlist.item icon="book-open" :href="route('students.enrolled')" :current="request()->routeIs('students.enrolled')" wire:navigate>{{ __('Enrolled Students') }}</flux:navlist.item>
+<flux:navlist.item icon="arrow-path" :href="route('students.change-of-course')" :current="request()->routeIs('students.change-of-course')" wire:navigate>{{ __('Change of Course') }}</flux:navlist.item>
 </flux:navlist.group>
 @endrole
+
 
 @role('student-manager|super-admin')
 <flux:navlist.group heading="Student Management" expandable :expanded="false">
 {{-- <flux:navlist.item icon="book-open" :href="route('students')" :current="request()->routeIs('students')" wire:navigate>{{ __('Students') }}</flux:navlist.item> --}}
 <flux:navlist.item icon="envelope-open" :href="route('students.reset-email')" :current="request()->routeIs('students.reset-email')" wire:navigate>{{ __('Reset Email') }}</flux:navlist.item>
+<flux:navlist.item icon="arrow-path" :href="route('students.change-of-course')" :current="request()->routeIs('students.change-of-course')" wire:navigate>{{ __('Change of Course') }}</flux:navlist.item>
 </flux:navlist.group>
-@endrole
 
-@role('student-manager|super-admin')
-<flux:navlist.group heading="Student Management" expandable :expanded="false">
-{{-- <flux:navlist.item icon="book-open" :href="route('students')" :current="request()->routeIs('students')" wire:navigate>{{ __('Students') }}</flux:navlist.item> --}}
-<flux:navlist.item icon="envelope-open" :href="route('students.reset-email')" :current="request()->routeIs('students.reset-email')" wire:navigate>{{ __('Reset Email') }}</flux:navlist.item>
-</flux:navlist.group>
+{{-- Course Management --}}
+<flux:navlist.group heading="Course Management" expandable :expanded="false">
+    <flux:navlist.item icon="bars-arrow-down" :href="route('courses.manage-courses')" :current="request()->routeIs('courses.manage-courses')" wire:navigate>{{ __('Manage Courses') }}</flux:navlist.item>
+    <flux:navlist.item icon="arrow-up-tray" :href="route('courses.bulk-upload')" :current="request()->routeIs('courses.bulk-upload')" wire:navigate>{{ __('Bulk Upload Courses') }}</flux:navlist.item>
+    </flux:navlist.group>
+
+
 @endrole
 
 @role('bursary-manager|super-admin')
@@ -49,6 +53,7 @@
 <flux:navlist.item icon="document-magnifying-glass" :href="route('bursary.confirm-payment-ref')" :current="request()->routeIs('bursary.confirm-payment-ref')" wire:navigate>{{ __('Confirm TransRef') }}</flux:navlist.item>
 <flux:navlist.item icon="circle-stack" :href="route('bursary.fee-item')" :current="request()->routeIs('bursary.fee-item')" wire:navigate>{{ __('Manage Fee Item') }}</flux:navlist.item>
 <flux:navlist.item icon="chart-bar" :href="route('bursary.program-type-fee-item-amount')" :current="request()->routeIs('bursary.program-type-fee-item-amount')" wire:navigate>{{ __('Fee Template') }}</flux:navlist.item>
+<flux:navlist.item icon="arrows-right-left" :href="route('students.fee-transfer')" :current="request()->routeIs('students.fee-transfer')" wire:navigate>{{ __('Fee Transfer') }}</flux:navlist.item>
 </flux:navlist.group>
 @endrole
 

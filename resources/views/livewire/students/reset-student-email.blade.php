@@ -73,6 +73,36 @@ space-y-4">
 
     </div>
 
+        <div class="bg-white dark:bg-gray-900
+                border border-gray-200 dark:border-gray-700
+                rounded-md px-3 py-2">
+
+        <span class="text-xs uppercase tracking-wide
+                    text-gray-500 dark:text-gray-400 block">
+            Screening Code
+        </span>
+
+        <p class="font-semibold text-gray-800 dark:text-white break-all">
+            {{ $student['screening_code'] }}
+        </p>
+
+    </div>
+
+        <div class="bg-white dark:bg-gray-900
+                border border-gray-200 dark:border-gray-700
+                rounded-md px-3 py-2">
+
+        <span class="text-xs uppercase tracking-wide
+                    text-gray-500 dark:text-gray-400 block">
+            Gender
+        </span>
+
+        <p class="font-semibold text-gray-800 dark:text-white break-all">
+            {{ $student['sex'] }}
+        </p>
+
+    </div>
+
 </div>
 
 

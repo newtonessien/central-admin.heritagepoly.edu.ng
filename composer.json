@@ -15,11 +15,11 @@
         "laravel/tinker": "^2.10.1",
         "livewire/flux": "^2.3",
         "livewire/flux-pro": "^2.3",
+        "livewire/livewire": "^3.7",
         "livewire/volt": "^1.7.0",
+        "phpoffice/phpspreadsheet": "5.4",
         "spatie/laravel-permission": "^6.21",
-        "spatie/simple-excel": "^3.8",
-        "livewire/livewire": "^3.7"
-
+        "spatie/simple-excel": "^3.8"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

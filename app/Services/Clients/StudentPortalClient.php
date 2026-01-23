@@ -214,12 +214,29 @@ public function getStudents(array $filters = []): array
     return $resp->json() ?? ['data' => [], 'meta' => []];
 }
 
+// public function getStudentByRegno(string $regno, array $params = []): array
+// {
+//     $resp = $this->httpClient()
+//         ->get("{$this->baseUrl}/students/{$regno}", $params);
+//
+//     return $resp->json() ?? [];
+// }
+
 public function getStudentByRegno(string $regno, array $params = []): array
 {
-    $resp = $this->httpClient()
-        ->get("{$this->baseUrl}/students/{$regno}", $params);
+    logger()->info('CLIENT OUTGOING QUERY', [
+    'query' => $params,
+]);
 
-    return $resp->json() ?? [];
+    return $this->httpClient()->get(
+        "{$this->baseUrl}/students/" . rawurlencode($regno),
+        ['query' => $params]
+    )->json() ?? [];
+}
+
+public function getStudentWithDetails(string $regno): array
+{
+    return $this->getStudentByRegno($regno, ['with' => 'details']);
 }
 
 public function migrateStudentBasic(array $payload): array
@@ -675,6 +692,95 @@ public function resetEmail(string $userId, string $email): array
     return $resp->json() ?? [];
 }
 
+/* =========================
+     * COURSES
+     * ========================= */
+
+    public function getCourses(array $params = []): array
+    {
+        $resp = $this->httpClient()
+            ->get("{$this->baseUrl}/courses", $params);
+
+        return $resp->json() ?? [];
+    }
+
+      public function createCourse(array $payload): array
+    {
+        $resp = $this->httpClient()
+            ->post("{$this->baseUrl}/courses", $payload);
+
+        return $resp->json() ?? [];
+    }
+
+     public function updateCourse(int $courseId, array $payload): array
+    {
+        $resp = $this->httpClient()
+            ->put("{$this->baseUrl}/courses/{$courseId}", $payload);
+
+        return $resp->json() ?? [];
+    }
+
+     public function deactivateCourse(int $courseId): array
+    {
+        $resp = $this->httpClient()
+            ->delete("{$this->baseUrl}/courses/{$courseId}");
+
+        return $resp->json() ?? [];
+    }
+
+   public function bulkImportCourses(array $payload): array
+{
+    try {
+        $res = $this->httpClient()
+            ->post("{$this->baseUrl}/courses/bulk-import", $payload)
+            ->throw();
+
+        return $this->unwrap($res->json());
+    } catch (\Throwable $e) {
+        report($e);
+        return [
+            'success' => false,
+            'message' => 'Bulk import request failed',
+        ];
+    }
+}
+
+
+
+public function createChangeOfCourse(array $payload): array
+{
+    $resp = $this->httpClient()
+        ->post("{$this->baseUrl}/students/change-of-course", $payload);
+
+    return json_decode($resp->getBody()->getContents(), true) ?? [];
+}
+
+public function approveChangeOfCourse(int $id, array $payload): array
+{
+    $resp = $this->httpClient()
+        ->post("{$this->baseUrl}/students/change-of-course/{$id}/approve", $payload);
+
+    return json_decode($resp->getBody()->getContents(), true) ?? [];
+}
+
+
+//Fee transfer
+//Get Payment Source Types
+public function getPaymentSourceTypes(): array
+{
+    $resp = $this->httpClient()
+        ->get("{$this->baseUrl}/payment-source-types");
+    return $resp->json() ?? [];
+
+}
+
+    public function createFeeTransfer(array $payload): array
+    {
+        $resp = $this->httpClient()
+            ->post("{$this->baseUrl}/fee-transfers", $payload);
+
+        return $resp->json() ?? [];
+    }
 
 
 

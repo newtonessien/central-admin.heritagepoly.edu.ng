@@ -9,9 +9,12 @@ use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Appearance;
 use Illuminate\Support\Facades\Route;
+use App\Livewire\Courses\ManageCourses;
 use App\Livewire\Bursary\ApprovePayment;
 use App\Livewire\Bursary\StudentFeeReport;
 use App\Livewire\Bursary\ConfirmPaymentRef;
+use App\Livewire\Courses\BulkUploadCourses;
+use App\Livewire\Students\FeeTransfer\Start;
 use App\Livewire\Students\ResetStudentEmail;
 use App\Livewire\Bursary\OtherPaymentsReport;
 use App\Livewire\Bursary\AdmissionPaymentReport;
@@ -21,6 +24,9 @@ use App\Livewire\Admissions\EnrolledStudents\Index;
 use App\Livewire\Bursary\ConsultantSchoolFeesReport;
 use App\Livewire\Bursary\ProgramTypeFeeItemAmountManager;
 use App\Http\Controllers\Export\CandidateExportController;
+use App\Livewire\Students\ChangeOfCourse\ChangeOfCourseForm;
+use App\Http\Controllers\Course\CourseBulkTemplateController;
+use App\Livewire\Students\ChangeOfCourse\ChangeOfCourseIndex;
 use App\Http\Controllers\Export\AdmissionPaymentExportController;
 use App\Livewire\AdmittedStudent; // Remove this line if the class does not exist
 
@@ -87,6 +93,11 @@ Route::get('/payments/export/excel', [AdmissionPaymentExportController::class, '
 Route::get('/payments/export/pdf', [AdmissionPaymentExportController::class, 'exportPdf'])->name('exports.admissions.export.pdf');
 });
 
+Route::get(
+    '/courses/bulk/template',
+    [CourseBulkTemplateController::class, 'download']
+)->name('courses.bulk.template');
+
 // User Management Routes
 Route::get('/admin/users', Users::class)
 ->name('admin.users')
@@ -95,7 +106,22 @@ Route::get('/admissions/change-application-type', ChangeApplicationType::class)
 ->name('admissions.change-application-type')
 ->middleware('role:admissions-manager|super-admin');
 
+Route::get('/students/fee-transfer',Start::class)->name('students.fee-transfer')
+->middleware('role:student-manager|super-admin');
+
 Route::get('/students/reset-email', ResetStudentEmail::class)->name('students.reset-email')
+->middleware('role:student-manager|super-admin');
+
+Route::get('/students/change-of-course', ChangeOfCourseIndex::class)->name('students.change-of-course')
+->middleware('role:student-manager|super-admin|admissions-manager');
+
+Route::get('/students/change-of-course/{regno}', ChangeOfCourseForm::class)->name('students.change-of-course.form')
+->middleware('role:student-manager|super-admin|admissions-manager');
+
+Route::get('/courses/manage-courses', ManageCourses::class)->name('courses.manage-courses')
+->middleware('role:student-manager|super-admin');
+
+Route::get('/courses/bulk-upload', BulkUploadCourses::class)->name('courses.bulk-upload')
 ->middleware('role:student-manager|super-admin');
 
 Route::get('/exports/candidates.xlsx', [CandidateExportController::class, 'excel'])

@@ -151,6 +151,7 @@ class AdmissionsPortalClient
                     'program_id'       => $cand['program_id'] ?? null,
                     'faculty_id'       => $cand['faculty_id'] ?? null,
                     'department_id'    => $cand['department_id'] ?? null,
+                    'study_center_id'  => $cand['study_center_id'] ?? null,
                 ]);
 
                 return $cand;
@@ -202,12 +203,13 @@ class AdmissionsPortalClient
             'regno'            => (string)($cand['regno'] ?? ''),
             'jamb_score'       => (string)($cand['jamb_score'] ?? ''),
             'jamb_no'          => (string)($cand['jamb_no'] ?? ''),
-            'program_id'       => (int)($cand['program_id'] ?? 0),
-            'faculty_id'       => (int)($cand['faculty_id'] ?? 0),
-            'department_id'    => (int)($cand['department_id'] ?? 0),
-            'acad_session_id'  => (int)($cand['acad_session_id'] ?? 0),
-            'start_session_id' => (int)($cand['start_session_id'] ?? $cand['acad_session_id'] ?? 0),
+            'program_id'       => (int)($cand['program_id'] ?? null),
+            'faculty_id'       => (int)($cand['faculty_id'] ?? null),
+            'department_id'    => (int)($cand['department_id'] ?? null),
+            'acad_session_id'  => (int)($cand['acad_session_id'] ?? null),
+            'start_session_id' => (int)($cand['start_session_id'] ?? $cand['acad_session_id'] ?? null),
             'is_active'        => (bool)($cand['is_active'] ?? true),
+            'study_center_id'  => (int)($cand['study_center_id'] ?? null),
         ];
     }
 
@@ -306,6 +308,24 @@ public function fetchAdmissionStudyCenterSummary(array $filters = []): array
 
         return [];
     }
+}
+
+public function getProgramTypeByName(string $name): ?array
+{
+    $res = $this->httpClient()->get("{$this->baseUrl}/program-type");
+
+    $items = $res['data'] ?? [];
+
+    foreach ($items as $item) {
+        if (
+            isset($item['name']) &&
+            strcasecmp(trim($item['name']), trim($name)) === 0
+        ) {
+            return $item;
+        }
+    }
+
+    return null;
 }
 
 
