@@ -11,6 +11,7 @@ use App\Livewire\Settings\Appearance;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Courses\ManageCourses;
 use App\Livewire\Bursary\ApprovePayment;
+use App\Livewire\Students\MarkAsScreened;
 use App\Livewire\Bursary\StudentFeeReport;
 use App\Livewire\Bursary\ConfirmPaymentRef;
 use App\Livewire\Courses\BulkUploadCourses;
@@ -105,6 +106,9 @@ Route::get('/admin/users', Users::class)
 Route::get('/admissions/change-application-type', ChangeApplicationType::class)
 ->name('admissions.change-application-type')
 ->middleware('role:admissions-manager|super-admin');
+
+Route::get('/students/mark-screened', MarkAsScreened::class)->name('students.mark-screened')
+->middleware('role:student-manager|super-admin|bursary-manager');
 
 Route::get('/students/fee-transfer',Start::class)->name('students.fee-transfer')
 ->middleware('role:student-manager|super-admin');

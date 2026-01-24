@@ -782,6 +782,19 @@ public function getPaymentSourceTypes(): array
         return $resp->json() ?? [];
     }
 
+//Marked as screened
+public function markStudentAsScreened(string $regno, string $adminEmail): array
+{
+    $resp = $this->httpClient()->post(
+        "{$this->baseUrl}/students/" . rawurlencode($regno) . "/mark-screened",
+        [
+            'email' => $adminEmail, // ✅ same as Change of Course
+        ]
+    );
+
+    return $resp->json() ?? [];
+}
+
 
 
 }
