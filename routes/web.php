@@ -25,6 +25,7 @@ use App\Livewire\Admissions\EnrolledStudents\Index;
 use App\Livewire\Bursary\ConsultantSchoolFeesReport;
 use App\Livewire\Bursary\ProgramTypeFeeItemAmountManager;
 use App\Http\Controllers\Export\CandidateExportController;
+use App\Livewire\Students\AcademicRequests\TransferRequests;
 use App\Livewire\Students\ChangeOfCourse\ChangeOfCourseForm;
 use App\Http\Controllers\Course\CourseBulkTemplateController;
 use App\Livewire\Students\ChangeOfCourse\ChangeOfCourseIndex;
@@ -109,6 +110,8 @@ Route::get('/admissions/change-application-type', ChangeApplicationType::class)
 
 Route::get('/students/mark-screened', MarkAsScreened::class)->name('students.mark-screened')
 ->middleware('role:student-manager|super-admin|bursary-manager');
+Route::get('/students/transfer-requests', TransferRequests::class)->name('students.transfer-requests')
+->middleware('role:student-manager|super-admin');
 
 Route::get('/students/fee-transfer',Start::class)->name('students.fee-transfer')
 ->middleware('role:student-manager|super-admin');

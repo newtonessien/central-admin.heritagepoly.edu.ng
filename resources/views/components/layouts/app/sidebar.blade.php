@@ -34,6 +34,7 @@
 <flux:navlist.item icon="envelope-open" :href="route('students.reset-email')" :current="request()->routeIs('students.reset-email')" wire:navigate>{{ __('Reset Email') }}</flux:navlist.item>
 <flux:navlist.item icon="arrow-path" :href="route('students.change-of-course')" :current="request()->routeIs('students.change-of-course')" wire:navigate>{{ __('Change of Course') }}</flux:navlist.item>
 <flux:navlist.item icon="check-circle" :href="route('students.mark-screened')" :current="request()->routeIs('students.mark-screened')" wire:navigate>{{ __('Mark as Screened') }}</flux:navlist.item>
+<flux:navlist.item icon="users" :href="route('students.transfer-requests')" :current="request()->routeIs('students.transfer-requests')" wire:navigate>{{ __('Transfer Requests') }}</flux:navlist.item>
 </flux:navlist.group>
 
 {{-- Course Management --}}

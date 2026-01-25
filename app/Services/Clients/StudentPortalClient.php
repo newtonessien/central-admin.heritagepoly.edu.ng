@@ -796,5 +796,43 @@ public function markStudentAsScreened(string $regno, string $adminEmail): array
 }
 
 
+//Transfer Requests
+public function getPendingTransfers(): array
+{
+    $resp = $this->httpClient()->get(
+        "{$this->baseUrl}/academic-requests",
+        [
+            'type'   => 'intra-university',
+            'status' => 'pending',
+        ]
+    );
+
+    return $resp->json() ?? [];
+}
+public function getTransferRequest(int $id): array
+{
+    $resp = $this->httpClient()->get(
+        "{$this->baseUrl}/academic-requests/{$id}"
+    );
+
+    return $resp->json() ?? [];
+}
+
+
+public function approveTransfer(int $requestId, string $adminEmail): array
+{
+    $resp = $this->httpClient()->post(
+        "{$this->baseUrl}/academic-requests/{$requestId}/approve-intra-university-transfer",
+        [
+            'performed_by' => $adminEmail, // ✅ consistent with Change of Course
+        ]
+    );
+
+    return $resp->json() ?? [];
+}
+
+
+
+
 
 }
