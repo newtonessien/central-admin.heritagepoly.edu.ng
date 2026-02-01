@@ -41,7 +41,7 @@ Personal Details
 <div>
 <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Registration Number</p>
 <p class="text-sm font-medium text-gray-900 dark:text-white font-mono">
-{{ $student['regno'] ?? 'Not available' }}
+{{ $student['matric_no'] ?? $student['regno'] }}
 </p>
 </div>
 </div>
@@ -123,7 +123,7 @@ Academic Information
 </svg>
 <span>Last updated: Just now</span>
 </div>
-<span>ID: {{ $student['regno'] ?? 'N/A' }}</span>
+<span>ID: {{ $student['matric_no'] ?? $student['regno'] }}</span>
 </div>
 </div>
 </div>

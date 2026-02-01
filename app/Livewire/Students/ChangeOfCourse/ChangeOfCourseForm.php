@@ -30,15 +30,17 @@ public ?int $departmentId = null;
 public ?int $programId = null;
 public ?int $programTypeId = null;
 
-
 // Phase toggle
 public string $changeType = 'same_program_type';
 // Phase 2 only
 public ?int $toProgramTypeId = null;
-
 // Program types for selector
 public array $programTypes = [];
 
+// Phase 3 — matric action
+public ?string $matricAction = null;
+
+public int $step = 1;
 
 protected function rules(): array
 {
@@ -124,12 +126,16 @@ $this->programTypeId = (int) $pt['id'];
 protected function evaluateEligibility(array $student): void
 {
 // Phase 1: NOT matriculated yet
-if (!empty($student['matric_no'])) {
-$this->setIneligible(
-'Student has been matriculated. Change of course not allowed.'
-);
-return;
+
+if (! empty($student['matric_no'])) {
+    // Phase 3 eligible
+    $this->setEligible(
+        'Student has been matriculated. Matric number action is required.'
+    );
+    return;
 }
+
+
 
 if (!empty($student['is_graduated'])) {
 $this->setIneligible(
@@ -161,6 +167,12 @@ $this->eligibilityMessage =
 protected function setIneligible(string $message): void
 {
 $this->isEligible = false;
+$this->eligibilityMessage = $message;
+}
+
+protected function setEligible(string $message): void
+{
+$this->isEligible = true;
 $this->eligibilityMessage = $message;
 }
 
@@ -257,15 +269,20 @@ public function updatedToProgramTypeId($value, AdmissionsPortalClient $client)
 
 }
 
-
-
-
 public function submit(StudentPortalClient $client)
 {
 if (! $this->isEligible) {
 Flux::toast('Student is not eligible for change of course.', variant: 'danger');
 return;
 }
+
+
+if ($this->studentHasMatric() && empty($this->matricAction)) {
+    $this->addError('matricAction', 'Please select how to handle the matric number.');
+    return;
+}
+
+
 
 $this->validate();
 $this->validateNotSameProgram();
@@ -286,6 +303,20 @@ $createPayload = [
 'requested_by'    => Auth::user()->email,
 ];
 
+// -------------------------
+// PHASE 3: MATRIC ACTION
+// -------------------------
+if (! empty($this->student['matric_no'])) {
+
+    if (empty($this->matricAction)) {
+        throw new \Exception(
+            'Please select how to handle the matric number.'
+        );
+    }
+
+    $createPayload['matric_action'] = $this->matricAction;
+}
+
 if ($this->changeType === 'inter_program_type') {
     $createPayload['to_program_type_id'] = $this->toProgramTypeId;
 }
@@ -298,32 +329,62 @@ throw new \Exception($createResp['message'] ?? 'Unable to create change request.
 
 $changeId = $createResp['data']['id'];
 
+
 /** -----------------------------------------
  * STEP 2: Approve & apply immediately
  * -------------------------------------- */
+$payload = [
+    'performed_by' => Auth::user()->email,
+];
+
+// -------------------------
+// PHASE 3: MATRIC ACTION
+// -------------------------
+if (! empty($this->student['matric_no'])) {
+
+    if (empty($this->matricAction)) {
+        throw new \Exception(
+            'Please select how to handle the matric number.'
+        );
+    }
+
+    $payload['matric_action'] = $this->matricAction;
+}
+
 $approveResp = $client->approveChangeOfCourse(
-$changeId,
-[
-'performed_by' => Auth::user()->email,
-]
+    $changeId,
+    $payload
 );
 
 if (empty($approveResp['success'])) {
-throw new \Exception($approveResp['message'] ?? 'Approval failed.');
+    throw new \Exception($approveResp['message'] ?? 'Approval failed.');
 }
+
+
 
 /** -----------------------------------------
  * SUCCESS
  * -------------------------------------- */
+// Flux::toast(
+// 'Change of course applied successfully.',
+// variant: 'success',
+// position: 'top-right',
+// duration: 4000
+// );
+
+// // Optional: redirect back to lookup
+// return redirect()->route('students.change-of-course');
+
 Flux::toast(
-'Change of course applied successfully.',
-variant: 'success',
-position: 'top-right',
-duration: 4000
+    'Change of course applied successfully.' . $this->student['matric_no'],
+    variant: 'success',
+    position: 'top-right',
+    duration: 3000
 );
 
-// Optional: redirect back to lookup
-return redirect()->route('students.change-of-course');
+$this->dispatch('redirect-after-toast', url: route('students.change-of-course'));
+
+
 
 } catch (\Throwable $e) {
 Flux::toast(
@@ -335,6 +396,91 @@ position: 'top-right'
 $this->isSubmitting = false;
 }
 }
+
+protected function studentHasMatric(): bool
+{
+    return ! empty($this->student['matric_no']);
+}
+
+
+public function nextStep()
+{
+    if ($this->step === 3 && empty($this->programmeDiff)) {
+        Flux::toast('Please complete programme selection.', variant: 'warning');
+        return;
+    }
+
+    if ($this->step < 4) {
+        $this->step++;
+    }
+}
+
+
+public function prevStep()
+{
+    if ($this->step > 1) {
+        $this->step--;
+    }
+}
+
+
+
+protected function resolveFacultyName(): string
+{
+    return collect($this->faculties)
+        ->firstWhere('id', $this->facultyId)['name'] ?? '—';
+}
+
+protected function resolveDepartmentName(): string
+{
+    return collect($this->departments)
+        ->firstWhere('id', $this->departmentId)['name'] ?? '—';
+}
+
+protected function resolveProgramName(): string
+{
+    return collect($this->programs)
+        ->firstWhere('id', $this->programId)['name'] ?? '—';
+}
+
+protected function resolveProgramTypeName(): string
+{
+    if ($this->changeType === 'same_program_type') {
+        return $this->student['program_type'] ?? '—';
+    }
+
+    return collect($this->programTypes)
+        ->firstWhere('id', $this->toProgramTypeId)['name'] ?? '—';
+}
+
+public function getProgrammeDiffProperty(): array
+{
+    if (! $this->student || ! $this->programId) {
+        return [];
+    }
+
+    return [
+        'Program Type' => [
+            'from' => $this->student['program_type'] ?? '—',
+            'to'   => $this->resolveProgramTypeName(),
+        ],
+        'Faculty' => [
+            'from' => $this->student['faculty'] ?? '—',
+            'to'   => $this->resolveFacultyName(),
+        ],
+        'Department' => [
+            'from' => $this->student['department'] ?? '—',
+            'to'   => $this->resolveDepartmentName(),
+        ],
+        'Programme' => [
+            'from' => $this->student['program'] ?? '—',
+            'to'   => $this->resolveProgramName(),
+        ],
+    ];
+}
+
+
+
 
 
 public function render()
