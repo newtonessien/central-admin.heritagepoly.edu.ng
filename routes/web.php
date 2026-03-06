@@ -1,36 +1,38 @@
 <?php
-
-use App\Livewire\Bursary;
-use App\Livewire\Student;
-use App\Livewire\Admission;
-use App\Livewire\Admin\Users;
-use App\Livewire\Bursary\FeeItem;
-use App\Livewire\Settings\Profile;
-use App\Livewire\Settings\Password;
-use App\Livewire\Settings\Appearance;
-use Illuminate\Support\Facades\Route;
-use App\Livewire\Courses\ManageCourses;
-use App\Livewire\Bursary\ApprovePayment;
-use App\Livewire\Students\MarkAsScreened;
-use App\Livewire\Bursary\StudentFeeReport;
-use App\Livewire\Bursary\ConfirmPaymentRef;
-use App\Livewire\Courses\BulkUploadCourses;
-use App\Livewire\Students\FeeTransfer\Start;
-use App\Livewire\Students\ResetStudentEmail;
-use App\Livewire\Bursary\OtherPaymentsReport;
-use App\Livewire\Bursary\AdmissionPaymentReport;
-use App\Livewire\Admissions\ChangeApplicationType;
-use App\Livewire\Bursary\StudyCenterSummaryReport;
-use App\Livewire\Admissions\EnrolledStudents\Index;
-use App\Livewire\Bursary\ConsultantSchoolFeesReport;
-use App\Livewire\Bursary\ProgramTypeFeeItemAmountManager;
+use App\Http\Controllers\Course\CourseBulkTemplateController;
+use App\Http\Controllers\Export\AdmissionPaymentExportController;
 use App\Http\Controllers\Export\CandidateExportController;
+use App\Http\Controllers\Export\TutorialListExcelController;
+use App\Http\Controllers\Export\TutorialListPdfController;
+use App\Livewire\Admin\Users;
+use App\Livewire\Admission;
+use App\Livewire\Admissions\ChangeApplicationType;
+use App\Livewire\Admissions\EnrolledStudents\Index;
+use App\Livewire\AdmittedStudent; // Remove this line if the class does not exist
+use App\Livewire\Bursary;
+use App\Livewire\Bursary\AdmissionPaymentReport;
+use App\Livewire\Bursary\ApprovePayment;
+use App\Livewire\Bursary\ConfirmPaymentRef;
+use App\Livewire\Bursary\ConsultantSchoolFeesReport;
+use App\Livewire\Bursary\FeeItem;
+use App\Livewire\Bursary\OtherPaymentsReport;
+use App\Livewire\Bursary\ProgramTypeFeeItemAmountManager;
+use App\Livewire\Bursary\StudentFeeReport;
+use App\Livewire\Bursary\StudyCenterSummaryReport;
+use App\Livewire\Courses\BulkUploadCourses;
+use App\Livewire\Courses\ManageCourses;
+use App\Livewire\Registration\TutorialList;
+use App\Livewire\Settings\Appearance;
+use App\Livewire\Settings\Password;
+use App\Livewire\Settings\Profile;
+use App\Livewire\Student;
 use App\Livewire\Students\AcademicRequests\TransferRequests;
 use App\Livewire\Students\ChangeOfCourse\ChangeOfCourseForm;
-use App\Http\Controllers\Course\CourseBulkTemplateController;
 use App\Livewire\Students\ChangeOfCourse\ChangeOfCourseIndex;
-use App\Http\Controllers\Export\AdmissionPaymentExportController;
-use App\Livewire\AdmittedStudent; // Remove this line if the class does not exist
+use App\Livewire\Students\FeeTransfer\Start;
+use App\Livewire\Students\MarkAsScreened;
+use App\Livewire\Students\ResetStudentEmail;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
 return view('welcome');
@@ -89,6 +91,19 @@ Route::get('/bursary/consultant-school-fees-report', ConsultantSchoolFeesReport:
 Route::get('/bursary/study-center-summary-report', StudyCenterSummaryReport::class)
 ->name('bursary.study-center-summary-report')
 ->middleware('role:super-admin');
+
+Route::get('/registration/tutorial-list', TutorialList::class)
+    ->name('registration.tutorial-list')
+    ->middleware('role:student-manager|super-admin');
+
+Route::get('/exports/tutorial-list/pdf',
+    [TutorialListPdfController::class, 'generate']
+   )->name('exports.tutorial-list.pdf');
+
+Route::get(
+    '/exports/tutorial-list/excel',
+    [TutorialListExcelController::class, 'generate']
+)->name('exports.tutorial-list.excel');
 
 Route::prefix('exports/admissions')->group(function () {
 Route::get('/payments/export/excel', [AdmissionPaymentExportController::class, 'exportExcel'])->name('exports.admissions.export.excel');

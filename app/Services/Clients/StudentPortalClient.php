@@ -704,6 +704,15 @@ public function resetEmail(string $userId, string $email): array
         return $resp->json() ?? [];
     }
 
+    
+    public function getCoursesFilter(array $params = []): array
+{
+    $resp = $this->httpClient()
+        ->get("{$this->baseUrl}/courses/filter", $params);
+
+    return $resp->json()['data'] ?? [];
+}
+
       public function createCourse(array $payload): array
     {
         $resp = $this->httpClient()
@@ -832,6 +841,13 @@ public function approveTransfer(int $requestId, string $adminEmail): array
 }
 
 
+public function getTutorialList(array $params)
+{
+
+     $resp = $this->httpClient()
+        ->get("{$this->baseUrl}/tutorial-lists", $params);
+        return $resp->json() ?? [];
+}
 
 
 
