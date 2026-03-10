@@ -2,6 +2,7 @@
 use App\Http\Controllers\Course\CourseBulkTemplateController;
 use App\Http\Controllers\Export\AdmissionPaymentExportController;
 use App\Http\Controllers\Export\CandidateExportController;
+use App\Http\Controllers\Export\MatricRegisterExportController;
 use App\Http\Controllers\Export\TutorialListExcelController;
 use App\Http\Controllers\Export\TutorialListPdfController;
 use App\Livewire\Admin\Users;
@@ -31,6 +32,7 @@ use App\Livewire\Students\ChangeOfCourse\ChangeOfCourseForm;
 use App\Livewire\Students\ChangeOfCourse\ChangeOfCourseIndex;
 use App\Livewire\Students\FeeTransfer\Start;
 use App\Livewire\Students\MarkAsScreened;
+use App\Livewire\Students\MatricRegister;
 use App\Livewire\Students\ResetStudentEmail;
 use Illuminate\Support\Facades\Route;
 
@@ -96,6 +98,9 @@ Route::get('/registration/tutorial-list', TutorialList::class)
     ->name('registration.tutorial-list')
     ->middleware('role:student-manager|super-admin');
 
+       Route::get('/students/matriculation-register', MatricRegister::class)->name('students.matriculation-register')
+    ->middleware('role:student-manager|super-admin|admissions-manager|bursary-manager');
+
 Route::get('/exports/tutorial-list/pdf',
     [TutorialListPdfController::class, 'generate']
    )->name('exports.tutorial-list.pdf');
@@ -109,6 +114,12 @@ Route::prefix('exports/admissions')->group(function () {
 Route::get('/payments/export/excel', [AdmissionPaymentExportController::class, 'exportExcel'])->name('exports.admissions.export.excel');
 Route::get('/payments/export/pdf', [AdmissionPaymentExportController::class, 'exportPdf'])->name('exports.admissions.export.pdf');
 });
+
+Route::get('/exports/matric-register/pdf',[MatricRegisterExportController::class, 'pdf']
+)->name('exports.matric-register.pdf');
+
+Route::get('/exports/matric-register/excel', [MatricRegisterExportController::class, 'excel']
+)->name('exports.matric-register.excel');
 
 Route::get(
     '/courses/bulk/template',

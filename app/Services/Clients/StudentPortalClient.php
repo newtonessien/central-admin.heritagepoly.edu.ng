@@ -850,5 +850,14 @@ public function getTutorialList(array $params)
 }
 
 
+public function getMatriculationRegister(array $params)
+{
+    $resp = $this->httpClient()
+        ->get("{$this->baseUrl}/students/matriculation-register", $params);
+
+    return $resp->json() ?? [];
+}
+
+
 
 }

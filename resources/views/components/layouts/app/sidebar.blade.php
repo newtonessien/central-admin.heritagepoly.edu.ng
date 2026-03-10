@@ -24,6 +24,7 @@
 <flux:navlist.item icon="arrow-path-rounded-square" :href="route('admissions.change-application-type')" :current="request()->routeIs('admissions.change-application-type')" wire:navigate>{{ __('Change App. Type') }}</flux:navlist.item>
 <flux:navlist.item icon="book-open" :href="route('students.enrolled')" :current="request()->routeIs('students.enrolled')" wire:navigate>{{ __('Enrolled Students') }}</flux:navlist.item>
 <flux:navlist.item icon="arrow-path" :href="route('students.change-of-course')" :current="request()->routeIs('students.change-of-course')" wire:navigate>{{ __('Change of Course') }}</flux:navlist.item>
+<flux:navlist.item icon="academic-cap" :href="route('students.matriculation-register')" :current="request()->routeIs('students.matriculation-register')" wire:navigate>{{ __('Matric. Register') }}</flux:navlist.item>
 </flux:navlist.group>
 @endrole
 
@@ -36,6 +37,7 @@
 <flux:navlist.item icon="check-circle" :href="route('students.mark-screened')" :current="request()->routeIs('students.mark-screened')" wire:navigate>{{ __('Mark as Screened') }}</flux:navlist.item>
 <flux:navlist.item icon="users" :href="route('students.transfer-requests')" :current="request()->routeIs('students.transfer-requests')" wire:navigate>{{ __('Transfer Requests') }}</flux:navlist.item>
 <flux:navlist.item icon="book-open" :href="route('registration.tutorial-list')" :current="request()->routeIs('registration.tutorial-list')" wire:navigate>{{ __('Tutorial List') }}</flux:navlist.item>
+<flux:navlist.item icon="academic-cap" :href="route('students.matriculation-register')" :current="request()->routeIs('students.matriculation-register')" wire:navigate>{{ __('Matric. Register') }}</flux:navlist.item>
 </flux:navlist.group>
 
 {{-- Course Management --}}
