@@ -38,6 +38,8 @@
 <flux:navlist.item icon="users" :href="route('students.transfer-requests')" :current="request()->routeIs('students.transfer-requests')" wire:navigate>{{ __('Transfer Requests') }}</flux:navlist.item>
 <flux:navlist.item icon="book-open" :href="route('registration.tutorial-list')" :current="request()->routeIs('registration.tutorial-list')" wire:navigate>{{ __('Tutorial List') }}</flux:navlist.item>
 <flux:navlist.item icon="academic-cap" :href="route('students.matriculation-register')" :current="request()->routeIs('students.matriculation-register')" wire:navigate>{{ __('Matric. Register') }}</flux:navlist.item>
+<flux:navlist.item icon="document-check" :href="route('students.course-registration')" :current="request()->routeIs('students.course-registration')" wire:navigate>{{ __('Register Courses') }}</flux:navlist.item>
+<flux:navlist.item icon="shield-check" :href="route('students.registered-courses')" :current="request()->routeIs('students.registered-courses')" wire:navigate>{{ __('Courses Registered') }}</flux:navlist.item>
 </flux:navlist.group>
 
 {{-- Course Management --}}

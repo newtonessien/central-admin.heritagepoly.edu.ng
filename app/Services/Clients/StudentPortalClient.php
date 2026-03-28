@@ -860,4 +860,65 @@ public function getMatriculationRegister(array $params)
 
 
 
+//Course registration
+public function getStudentCourseRegistration(array $params)
+{
+$resp = $this->httpClient()
+->get("{$this->baseUrl}/students/course-registration", $params);
+
+return $resp->json()['data'] ?? [];
+}
+
+
+public function registerStudentCourses(array $data)
+{
+    $resp = $this->httpClient()
+        ->post("{$this->baseUrl}/students/course-registration", $data);
+
+    return $resp->json();
+}
+
+public function toggleStudentCourse($id)
+{
+    return $this->httpClient()
+        ->patch("{$this->baseUrl}/students/course-registration/{$id}/toggle")
+        ->json();
+}
+
+public function deleteStudentCourse($id)
+{
+    return $this->httpClient()
+        ->delete("{$this->baseUrl}/students/course-registration/{$id}")
+        ->json();
+}
+
+public function validateStudentLevel(array $params)
+{
+    $resp = $this->httpClient()
+        ->get("{$this->baseUrl}/students/validate-level", $params);
+
+    return $resp->json();
+}
+
+
+public function getRegisteredCourses(array $params)
+{
+    $resp = $this->httpClient()
+        ->get("{$this->baseUrl}/students/registered-courses", $params);
+
+    return $resp->json() ?? [];
+}
+
+
+public function checkStudentFeePayment(array $params)
+{
+    $resp = $this->httpClient()
+        ->get("{$this->baseUrl}/payments/check-student-fee", $params);
+
+    return $resp->json() ?? [];
+}
+
+
+
+
 }
