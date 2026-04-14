@@ -67,7 +67,7 @@
                     <th class="border p-3 dark:border-gray-700 text-left">Centre</th>
                     <th class="border p-3 dark:border-gray-700 text-center">Transactions</th>
                     <th class="border p-3 dark:border-gray-700 text-right">Total Amount</th>
-                    <th class="border p-3 dark:border-gray-700 text-right">Commission(50%)</th>
+                    <th class="border p-3 dark:border-gray-700 text-right">Commission(45%)</th>
                     <th class="border p-3 dark:border-gray-700 text-right">Net Total</th>
                 </tr>
             </thead>
@@ -134,7 +134,7 @@
                             <th class="border p-3 dark:border-gray-700 text-left">Centre</th>
                             <th class="border p-3 dark:border-gray-700 text-center">Transactions</th>
                             <th class="border p-3 dark:border-gray-700 text-right">Total Amount</th>
-                            <th class="border p-3 dark:border-gray-700 text-right">Centre Commission (50%)</th>
+                            <th class="border p-3 dark:border-gray-700 text-right">Centre Commission (45%)</th>
                             <th class="border p-3 dark:border-gray-700 text-right">Total</th>
                         </tr>
                     </thead>
@@ -200,7 +200,7 @@
                             <th class="border p-3 dark:border-gray-700 text-left">Centre</th>
                             <th class="border p-3 dark:border-gray-700 text-center">Transactions</th>
                             <th class="border p-3 dark:border-gray-700 text-right">Total Amount</th>
-                            <th class="border p-3 dark:border-gray-700 text-right">Centre Commission (50%)</th>
+                            <th class="border p-3 dark:border-gray-700 text-right">Centre Commission (45%)</th>
                             <th class="border p-3 dark:border-gray-700 text-right">Total</th>
                         </tr>
                     </thead>
