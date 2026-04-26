@@ -46,25 +46,25 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
 
     <!-- Admissions -->
-    <a href="/login" class="group bg-white dark:bg-gray-800 shadow rounded-xl p-8 flex flex-col items-center text-center hover:shadow-lg hover:-translate-y-1 transition">
+    <a href="https://rms.heritagepoly.edu.ng/"  target="_blank" class="group bg-white dark:bg-gray-800 shadow rounded-xl p-8 flex flex-col items-center text-center hover:shadow-lg hover:-translate-y-1 transition">
       <div class="bg-green-100 text-green-700 p-4 rounded-full mb-4 group-hover:bg-green-600 group-hover:text-white transition">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0v7m0-7L3 9m9 5l9-5" />
         </svg>
       </div>
-      <h4 class="text-lg font-semibold">Admissions</h4>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Manage admission processes</p>
+      <h4 class="text-lg font-semibold">RMS</h4>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Result Management System</p>
     </a>
 
     <!-- Student Portal -->
-    <a href="/login" class="group bg-white dark:bg-gray-800 shadow rounded-xl p-8 flex flex-col items-center text-center hover:shadow-lg hover:-translate-y-1 transition">
+    <a href="https://legacy.heritagepoly.edu.ng/console/"  target="_blank" class="group bg-white dark:bg-gray-800 shadow rounded-xl p-8 flex flex-col items-center text-center hover:shadow-lg hover:-translate-y-1 transition">
       <div class="bg-green-100 text-green-700 p-4 rounded-full mb-4 group-hover:bg-green-600 group-hover:text-white transition">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A9 9 0 1112 21a9 9 0 01-6.879-3.196z" />
         </svg>
       </div>
-      <h4 class="text-lg font-semibold">Student Portal</h4>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Control student data</p>
+      <h4 class="text-lg font-semibold">Old Admin</h4>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Legacy Administration System</p>
     </a>
 
     <!-- Ebursary -->
