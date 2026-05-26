@@ -150,27 +150,26 @@ public function loadCourses(StudentPortalClient $client)
     |--------------------------------------------------------------------------
     */
 
-    $payment = $client->checkStudentFeePayment([
-        'regno' => $this->student['matric_no'],
-        'acad_session_id' => $this->session,
-        'semester' => $this->semester
-    ]);
+    // $payment = $client->checkStudentFeePayment([
+    //     'regno' => $this->student['matric_no'],
+    //     'acad_session_id' => $this->session,
+    //     'semester' => $this->semester
+    // ]);
 
-    //dd($payment, $this->student['matric_no'], $this->session, $this->semester);
 
-    if (!($payment['paid'] ?? false)) {
+    // if (!($payment['paid'] ?? false)) {
 
-        $this->resetCourses();
+    //     $this->resetCourses();
 
-        Flux::toast(
-            "Student has not paid fees for the selected session and semester.",
-            variant: 'danger',
-            position: 'top-right',
-            duration: 5000
-        );
+    //     Flux::toast(
+    //         "Student has not paid fees for the selected session and semester.",
+    //         variant: 'danger',
+    //         position: 'top-right',
+    //         duration: 5000
+    //     );
 
-        return;
-    }
+    //     return;
+    // }
 
     /*
     |--------------------------------------------------------------------------
