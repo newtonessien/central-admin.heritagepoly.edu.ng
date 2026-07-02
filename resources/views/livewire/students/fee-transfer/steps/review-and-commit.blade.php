@@ -18,7 +18,7 @@
 </li>
 <li class="flex justify-between">
 <span class="text-gray-600 dark:text-gray-400">Academic Session:</span>
-<span class="font-medium text-gray-900 dark:text-white">{{ $context['acad_session_name'] }}</span>
+<span class="font-medium text-gray-900 dark:text-white">{{ $context['acad_session_name'] ?? 'Not specified' }}</span>
 </li>
 <li class="flex justify-between">
 <span class="text-gray-600 dark:text-gray-400">Semester:</span>

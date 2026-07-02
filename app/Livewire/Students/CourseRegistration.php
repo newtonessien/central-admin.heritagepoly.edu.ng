@@ -30,7 +30,7 @@ public $includeLowerLevels = false;
 
 public $selectedCredits = 0;
 
-public $maxCreditLoad = 35;
+public $maxCreditLoad = 40;
 
 public $step = 1;
 
