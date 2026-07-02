@@ -45,7 +45,7 @@ public function exportExcel(Request $request)
     $writer = SimpleExcelWriter::create($path, 'xlsx');
 
     // 🟦 Add Report Header Section
-    $writer->addRow(['University of Uyo']);
+    $writer->addRow(['Heritage Polytechnic']);
     $writer->addRow(['Admissions Payment Report']);
 
     if (!empty($params['start_date']) && !empty($params['end_date'])) {

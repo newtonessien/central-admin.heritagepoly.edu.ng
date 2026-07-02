@@ -1,53 +1,474 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <meta charset="UTF-8">
-    <title>Admitted Students Export</title>
-    <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
-        th { background: #f2f2f2; }
-    </style>
+<meta charset="UTF-8">
+<title>Admitted Students Screening Report</title>
 </head>
+
+<style>
+
+@page {
+margin: 40px 35px 70px 35px;
+}
+
+body{
+font-family: DejaVu Sans,sans-serif;
+font-size:11px;
+color:#222;
+}
+
+.header{
+
+text-align:center;
+
+margin-bottom:20px;
+
+border-bottom:3px solid #000;
+
+padding-bottom:12px;
+
+}
+
+.logo{
+
+width:80px;
+
+height:auto;
+
+margin-bottom:8px;
+
+}
+
+.header h1{
+
+font-size:22px;
+
+font-weight:bold;
+
+margin:0;
+
+letter-spacing:.8px;
+
+}
+
+.header h2{
+
+margin-top:8px;
+
+font-size:15px;
+
+letter-spacing:1px;
+
+}
+
+.header p{
+
+margin-top:8px;
+
+font-size:11px;
+
+}
+
+
+.section-title{
+
+text-align:center;
+
+font-size:15px;
+
+font-weight:bold;
+
+margin-bottom:0;
+
+border:1px solid #555;
+
+border-bottom:none;
+
+padding:8px;
+
+background:#efefef;
+
+}
+
+.info-table{
+
+width:100%;
+
+border-collapse:collapse;
+
+margin-bottom:18px;
+
+}
+
+.info-table td{
+
+border:1px solid #555;
+
+padding:7px;
+
+}
+
+.info-table .label{
+
+width:18%;
+
+font-weight:bold;
+
+background:#f7f7f7;
+
+}
+
+
+.signature-table{
+
+width:100%;
+
+border:none;
+
+margin-top:50px;
+
+}
+
+.signature-table td{
+
+border:none;
+
+width:33%;
+
+text-align:center;
+
+vertical-align:top;
+
+}
+
+.line{
+
+border-top:1px solid #000;
+
+width:80%;
+
+margin:0 auto 10px auto;
+
+}
+
+
+/* ===========================
+REPORT TABLE
+=========================== */
+
+.report{
+width:100%;
+border-collapse:collapse;
+margin-top:15px;
+margin-bottom:20px;
+}
+
+.report thead th{
+
+background:#d9d9d9;
+
+border:1px solid #444;
+
+padding:7px 5px;
+
+font-size:10px;
+
+font-weight:bold;
+
+text-align:center;
+
+vertical-align:middle;
+
+}
+
+.report tbody td{
+
+border:1px solid #666;
+
+padding:6px 5px;
+
+font-size:10px;
+
+vertical-align:top;
+
+}
+
+.report tbody tr:nth-child(even){
+
+background:#f7f7f7;
+
+}
+
+.report tbody tr{
+
+page-break-inside:avoid;
+
+}
+
+.report td.center{
+
+text-align:center;
+
+}
+
+.report td.right{
+
+text-align:right;
+
+}
+
+.footer{
+
+    position:fixed;
+
+    bottom:-35px;
+
+    left:0;
+
+    right:0;
+
+    border-top:2px solid #000;
+
+    padding-top:8px;
+
+    font-size:10px;
+
+}
+</style>
+
+
+
 <body>
-    <h2>Admitted Students Screening List</h2>
 
-    <p>
-        <strong>Academic Session:</strong> {{ $acadSession }}<br>
-        <strong>Program Type:</strong> {{ $programType }}<br>
-        <strong>Faculty:</strong> {{ $faculty }}<br>
-        <strong>Department:</strong> {{ $department }}<br>
-        <strong>Program:</strong> {{ $program }}
-    </p>
+@php
+$logo = public_path('logo/app.jpg');
+@endphp
 
-    <table>
-        <thead>
-            <tr>
-                <th>RegNo</th>
-                <th>Name</th>
-                <th>Sex</th>
-                <th>Program Type</th>
-                <th>Faculty</th>
-                <th>Department</th>
-                <th>Program</th>
-                <th>Screening Code</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($students as $s)
-                <tr>
-                    <td>{{ $s['regno'] ?? '—' }}</td>
-                    <td>{{ $s['name'] ?? '—' }}</td>
-                    <td>{{ $s['sex'] ?? '—' }}</td>
-                    <td>{{ $s['program_type'] ?? '—' }}</td>
-                    <td>{{ $s['faculty'] ?? '—' }}</td>
-                    <td>{{ $s['department'] ?? '—' }}</td>
-                    <td>{{ $s['program'] ?? '—' }}</td>
-                    <td>{{ $s['screening_code'] ?? '—' }}</td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
+<div class="header">
+
+@if(file_exists($logo))
+<img src="{{ $logo }}" class="logo">
+@endif
+
+<h1>HERITAGE POLYTECHNIC</h1>
+
+<h2>ADMITTED STUDENTS SCREENING REPORT</h2>
+{{--
+<p>
+Generated on {{ now()->format('d F, Y h:i A') }}
+</p> --}}
+
+</div>
+<h3 class="section-title">
+REPORT INFORMATION
+</h3>
+
+<table class="info-table">
+
+<tr>
+
+<td class="label">Academic Session</td>
+<td>{{ $acadSession }}</td>
+
+<td class="label">Program</td>
+<td>{{ $program }}</td>
+
+</tr>
+
+<tr>
+
+<td class="label">Program Type</td>
+<td>{{ $programType }}</td>
+
+<td class="label">Start Date</td>
+<td>{{ $start_date ?: 'All' }}</td>
+
+</tr>
+
+<tr>
+
+<td class="label">Faculty</td>
+<td>{{ $faculty }}</td>
+
+<td class="label">End Date</td>
+<td>{{ $end_date ?: 'All' }}</td>
+
+</tr>
+
+<tr>
+
+<td class="label">Department</td>
+<td>{{ $department }}</td>
+
+<td class="label">Total Students</td>
+<td>{{ count($students) }}</td>
+
+</tr>
+
+</table>
+
+
+
+<table class="report">
+
+<thead>
+
+<tr>
+<th width="4%">SN</th>
+<th width="12%">Reg No</th>
+<th width="22%">Student Name</th>
+<th width="6%">Sex</th>
+<th width="12%">Program Type</th>
+<th width="15%">Faculty</th>
+<th width="15%">Department</th>
+<th width="14%">Screening Code</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+@forelse($students as $student)
+
+<tr>
+
+<td class="center">
+{{ $loop->iteration }}
+</td>
+
+<td>
+    {{ $student['regno'] ?? '—' }}
+</td>
+
+<td>
+    {{ ucwords(strtolower($student['name'] ?? '—')) }}
+</td>
+
+<td class="center">
+    {{ $student['sex'] ?? '—' }}
+</td>
+
+<td>
+    {{ $student['program_type'] ?? '—' }}
+</td>
+
+<td>
+    {{ ucwords(strtolower($student['faculty'] ?? '—')) }}
+</td>
+
+<td>
+    {{ ucwords(strtolower($student['department'] ?? '—')) }}
+</td>
+
+<td class="center">
+    {{ $student['screening_code'] ?? '—' }}
+</td>
+
+</tr>
+
+@empty
+
+<tr>
+<td colspan="8" align="center">
+    No admitted students found.
+</td>
+</tr>
+
+@endforelse
+
+</tbody>
+
+</table>
+
+<br><br>
+
+<p style="margin-bottom:35px;">
+This is to certify that the above listed students have been duly admitted and their records verified.
+</p>
+
+<table class="signature-table">
+
+<tr>
+
+<td>
+
+<div class="line"></div>
+
+Admissions Officer
+
+<br><br>
+
+Name: _______________________
+
+<br><br>
+
+Date: _______________________
+
+</td>
+
+<td>
+
+<div class="line"></div>
+
+Screening Officer
+
+<br><br>
+
+Name: _______________________
+
+<br><br>
+
+Date: _______________________
+
+</td>
+
+<td>
+
+<div class="line"></div>
+
+Registrar
+
+<br><br>
+
+Name: _______________________
+
+<br><br>
+
+Date: _______________________
+
+</td>
+
+</tr>
+
+</table>
+
+
+<div class="footer">
+
+<table width="100%">
+
+<tr>
+{{--
+<td style="border:none;">
+Generated by Central Administration Portal
+</td> --}}
+
+<td style="border:none;" align="left">
+Generated on {{ now()->format('d F, Y h:i A') }}
+</td>
+
+{{-- <td style="border:none;" align="right">
+
+
+</td> --}}
+
+</tr>
+
+</table>
+
+</div>
+
 </body>
+
 </html>
