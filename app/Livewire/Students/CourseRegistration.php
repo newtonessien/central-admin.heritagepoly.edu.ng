@@ -394,13 +394,13 @@ $this->calculateCredits();
 public function updatedLevel()
 {
 $limits = [
-1 => 35,
-2 => 35,
-3 => 35,
-4 => 35
+1 => 40,
+2 => 40,
+3 => 40,
+4 => 40
 ];
 
-$this->maxCreditLoad = $limits[$this->level] ?? 35;
+$this->maxCreditLoad = $limits[$this->level] ?? 40;
 }
 
 
