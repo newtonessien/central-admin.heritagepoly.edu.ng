@@ -23,6 +23,7 @@ use App\Livewire\Bursary\StudentFeeReport;
 use App\Livewire\Bursary\StudyCenterSummaryReport;
 use App\Livewire\Courses\BulkUploadCourses;
 use App\Livewire\Courses\ManageCourses;
+use App\Livewire\Jamb\ImportDashboard;
 use App\Livewire\Registration\TutorialList;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
@@ -273,6 +274,14 @@ Route::middleware(['auth'])->group(function () {
             [RegisteredCoursesPdfController::class,'courseRegistrationPdf'])
             ->name('exports.course-registration-report');
     });
+
+
+    //JAMB IMPORT ROUTES
+
+Route::get(
+    '/jamb-import-dashboard',
+    ImportDashboard::class
+)->name('jamb.import-dashboard');
 
 });
 

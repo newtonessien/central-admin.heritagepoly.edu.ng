@@ -19,6 +19,7 @@
 
 @role('admissions-manager|super-admin')
 <flux:navlist.group heading="Admissions Management" expandable :expanded="false">
+ <flux:navlist.item icon="arrow-down-on-square-stack" :href="route('jamb.import-dashboard')" :current="request()->routeIs('jamb.import-dashboard')" wire:navigate>{{ __('JAMB DataImport') }}</flux:navlist.item>
 <flux:navlist.item icon="academic-cap" :href="route('admissions')" :current="request()->routeIs('admissions')" wire:navigate>{{ __('Applications') }}</flux:navlist.item>
 <flux:navlist.item icon="user-group" :href="route('students.admitted')" :current="request()->routeIs('students.admitted')" wire:navigate>{{ __('Admitted Students') }}</flux:navlist.item>
 <flux:navlist.item icon="arrow-path-rounded-square" :href="route('admissions.change-application-type')" :current="request()->routeIs('admissions.change-application-type')" wire:navigate>{{ __('Change App. Type') }}</flux:navlist.item>

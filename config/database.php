@@ -112,6 +112,20 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        'admissions' => [
+        'driver' => 'mysql',
+        'host' => env('ADMISSIONS_DB_HOST'),
+        'port' => env('ADMISSIONS_DB_PORT'),
+        'database' => env('ADMISSIONS_DB_DATABASE'),
+        'username' => env('ADMISSIONS_DB_USERNAME'),
+        'password' => env('ADMISSIONS_DB_PASSWORD'),
+        'charset' => 'utf8mb4',
+        'collation' => 'utf8mb4_unicode_ci',
+        'prefix' => '',
+        'strict' => true,
+        'engine' => null,
+    ],
+
     ],
 
     /*
