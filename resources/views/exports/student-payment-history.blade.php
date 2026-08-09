@@ -215,7 +215,7 @@ STUDENT INFORMATION
 
 <tr>
 
-<th width="25%">Student Name</th>
+<th width="25%">Full Name</th>
 
 <td>{{ $student['name'] }} ({{ $student['user']['sex'] }})</td>
 
