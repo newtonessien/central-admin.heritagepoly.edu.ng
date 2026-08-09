@@ -345,109 +345,88 @@ STUDENT INFORMATION
 
 <div class="student-section">
 
-<table class="student-details">
+<table class="no-border">
 
 <tr>
 
-<th>
-Full Name
-</th>
+<td width="82%">
 
-<td>
-{{ $student['name'] ?? '-' }}
+<table>
+
+<tr>
+
+<th width="25%">Student Name</th>
+
+<td>{{ $student['name'] }} ({{ $student['user']['sex'] }})</td>
+
+</tr>
+
+<tr>
+<th>Registration No.</th>
+<td>{{ $student['matric_no'] ?? $student['regno'] }}</td>
+</tr>
+
+<tr>
+<th>Phone Number</th>
+<td>{{ $student['user']['phone_no'] ?? 'N/A' }}</td>
+</tr>
+
+
+<tr>
+
+<th>Programme</th>
+
+<td>{{ $student['program'] }}</td>
+
+</tr>
+
+<tr>
+
+<th>Programme Type</th>
+
+<td>{{ $student['program_type'] }}</td>
+
+</tr>
+
+<tr>
+
+<th>Faculty/Dept</th>
+
+<td>{{ $student['faculty'] }} / {{ $student['department'] }}</td>
+
+</tr>
+
+{{-- <tr>
+
+<th>Department</th>
+
+<td>{{ $student['department'] }}</td>
+
+</tr> --}}
+
+</table>
+
 </td>
 
-<th>
-Gender
-</th>
+<td width="18%" class="text-center">
 
-<td>
-{{ $student['user']['sex'] == 'M' ? 'Male' : ($student['user']['sex'] == 'F' ? 'Female' : '-') }}
-</td>
 
-<td
-rowspan="4"
-class="student-photo-cell"
->
-
-@if($passport)
+@if(!empty($student['user']['photo']))
 
 <img
-src="{{ $passport }}"
-class="student-photo"
->
+src="{{ file_url($student['user']['photo'], 'students') }}"
+class="student-photo">
 
 @else
 
-<div style="padding-top:35px; color:#888;">
+<div class="placeholder">
+
 NO PHOTO
+
 </div>
 
 @endif
 
-</td>
-
-</tr>
-
-
-<tr>
-
-<th>
-Matric No.
-</th>
-
-<td>
-{{ $student['matric_no'] ?? $student['regno'] ?? '-' }}
-</td>
-
-<th>
-Session
-</th>
-
-<td>
-{{ $student['acad_session'] ?? '-' }}
-</td>
-
-</tr>
-
-
-<tr>
-
-<th>
-Programme
-</th>
-
-<td>
-{{ $student['program'] ?? '-' }}
-</td>
-
-<th>
-Prog. Type
-</th>
-
-<td>
-{{ $student['program_type'] ?? '-' }}
-</td>
-
-</tr>
-
-
-<tr>
-
-<th>
-Faculty
-</th>
-
-<td>
-{{ $student['faculty'] ?? '-' }}
-</td>
-
-<th>
-Department
-</th>
-
-<td>
-{{ $student['department'] ?? '-' }}
 </td>
 
 </tr>
