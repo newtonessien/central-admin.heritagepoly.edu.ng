@@ -704,7 +704,7 @@ public function resetEmail(string $userId, string $email): array
         return $resp->json() ?? [];
     }
 
-    
+
     public function getCoursesFilter(array $params = []): array
 {
     $resp = $this->httpClient()
@@ -918,6 +918,45 @@ public function checkStudentFeePayment(array $params)
     return $resp->json() ?? [];
 }
 
+
+//Student 360 profile payment history
+/**
+ * Student Payment History.
+ */
+public function getStudentPaymentHistory(
+    string $regno,
+    array $filters = []
+): array {
+
+    return $this->httpClient()
+        ->get(
+            "{$this->baseUrl}/payments/" . rawurlencode($regno) . "/payment-history",
+            $filters
+        )
+        ->json() ?? [];
+}
+
+
+/**
+ * Get Student 360° Course Registration History.
+ *
+ * @param  string $regno
+ * @param  array  $filters
+ * @return array
+ */
+public function getCourseRegistrationHistory(
+    string $regno,
+    array $filters = []
+): array {
+    return $this->httpClient()
+        ->get(
+            "{$this->baseUrl}/students/"
+            . rawurlencode($regno)
+            . "/course-registration-history",
+            array_filter($filters, fn ($value) => $value !== null && $value !== '')
+        )
+        ->json() ?? [];
+}
 
 
 

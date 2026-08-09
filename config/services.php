@@ -55,6 +55,13 @@ return [
     'token' => env('STUDENT_PORTAL_TOKEN'),
 ],
 
+'rms' => [
+    'url' => env('APP_ENV') === 'local'
+        ? 'https://rms.heritagepoly.edu.ng.test/api/v1' // local Herd
+        : env('RMS_API_URL'),                     // production
+    'token' => env('RMS_API_TOKEN'),
+],
+
 // 'student_portal_central' => [
 //     'url' => env('APP_ENV') === 'local'
 //         ? 'https://students.heritagepoly.edu.ng.test/api/v1'
