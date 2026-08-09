@@ -16,7 +16,7 @@ public array $resultSummary = [];
 
 public array $sessions = [];
 
-public $startSessionId = 35;
+public $startSessionId = 14;
 
 /**
  * Active Student 360° tab.
