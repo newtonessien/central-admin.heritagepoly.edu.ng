@@ -178,12 +178,28 @@ font-weight: bold;
 color: #15803d;
 }
 
+.grade-ab {
+color: #13c956;
+}
+
 .grade-b {
 color: #2563eb;
 }
 
+.grade-b {
+color: #05256b;
+}
+
 .grade-c {
 color: #b45309;
+}
+
+.grade-bc {
+color: #723405;
+}
+
+.grade-cd {
+color: #a6ae0e;
 }
 
 .grade-d,
@@ -671,9 +687,15 @@ $gradeClass = match ($grade) {
 
 'A' => 'grade-a',
 
+'AB' => 'grade-ab',
+
 'B' => 'grade-b',
 
+'BC' => 'grade-bc',
+
 'C' => 'grade-c',
+
+'CD' => 'grade-cd',
 
 'D' => 'grade-d',
 
