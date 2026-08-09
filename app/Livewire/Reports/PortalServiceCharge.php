@@ -20,7 +20,7 @@ class PortalServiceCharge extends Component
 
     public string $endDate = '';
 
-    public string $groupBy = 'day';
+    public string $groupBy = 'month';
 
 
     /*
