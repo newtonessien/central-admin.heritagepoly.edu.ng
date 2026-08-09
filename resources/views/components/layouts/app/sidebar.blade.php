@@ -68,7 +68,7 @@
 
 @role('super-admin')
 <flux:navlist.group heading="Portal Commission" expandable :expanded="false">
-    <flux:navlist.item icon="presentation-chart-bar" :href="route('reports.portal-service-charge')" :current="request()->routeIs('reports.portal-service-charge')" wire:navigate>{{ __('Portal Commission') }}</flux:navlist.item>
+    {{-- <flux:navlist.item icon="presentation-chart-bar" :href="route('reports.portal-service-charge')" :current="request()->routeIs('reports.portal-service-charge')" wire:navigate>{{ __('Portal Commission') }}</flux:navlist.item> --}}
 {{-- <flux:navlist.item icon="presentation-chart-bar" :href="route('bursary.consultant-school-fees-report')" :current="request()->routeIs('bursary.consultant-school-fees-report')" wire:navigate>{{ __('Regular') }}</flux:navlist.item> --}}
     <flux:navlist.item icon="circle-stack" :href="route('bursary.study-center-summary-report')" :current="request()->routeIs('bursary.study-center-summary-report')" wire:navigate>{{ __('e-Learning') }}</flux:navlist.item>
 </flux:navlist.group>
