@@ -959,5 +959,26 @@ public function getCourseRegistrationHistory(
 }
 
 
+//Portal Service Charge
+
+
+
+
+public function getPortalServiceChargeReport(
+    array $filters = []
+): array {
+    return $this->httpClient()
+        ->get(
+             "{$this->baseUrl}/reports/portal-service-charge",
+            array_filter([
+                'start_date' => $filters['start_date'] ?? null,
+                'end_date'   => $filters['end_date'] ?? null,
+                'group_by'   => $filters['group_by'] ?? null,
+            ], fn ($value) => $value !== null && $value !== '')
+        )
+        ->throw()
+        ->json() ?? [];
+}
+
 
 }

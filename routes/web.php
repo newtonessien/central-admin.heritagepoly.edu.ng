@@ -28,12 +28,11 @@ use App\Livewire\Courses\BulkUploadCourses;
 use App\Livewire\Courses\ManageCourses;
 use App\Livewire\Jamb\ImportDashboard;
 use App\Livewire\Registration\TutorialList;
+use App\Livewire\Reports\PortalServiceCharge;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use App\Livewire\Student;
-use App\Livewire\Students\Profile\Show as StudentProfile;
-use App\Livewire\Students\Search\Index as StudentSearch;
 use App\Livewire\Students\AcademicRequests\TransferRequests;
 use App\Livewire\Students\ChangeOfCourse\ChangeOfCourseForm;
 use App\Livewire\Students\ChangeOfCourse\ChangeOfCourseIndex;
@@ -41,8 +40,10 @@ use App\Livewire\Students\CourseRegistration;
 use App\Livewire\Students\FeeTransfer\Start;
 use App\Livewire\Students\MarkAsScreened;
 use App\Livewire\Students\MatricRegister;
+use App\Livewire\Students\Profile\Show as StudentProfile;
 use App\Livewire\Students\RegisteredCoursesReport;
 use App\Livewire\Students\ResetStudentEmail;
+use App\Livewire\Students\Search\Index as StudentSearch;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -306,6 +307,13 @@ Route::get('/course-registration-report',
 [RegisteredCoursesPdfController::class,'courseRegistrationPdf'])
 ->name('exports.course-registration-report');
 });
+
+
+//Service Charge
+Route::get(
+    '/reports/portal-service-charge',
+    PortalServiceCharge::class
+)->name('reports.portal-service-charge');
 
 
 //JAMB IMPORT ROUTES
