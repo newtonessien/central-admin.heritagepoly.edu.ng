@@ -14,7 +14,7 @@ class AdmissionsService
         return Program::with(
             'department.faculty'
         )
-        ->where('program_type_id', 1)
+        ->where('program_type_id', 2)
         ->where('is_visible', 1)
         ->orderBy('name')
         ->get();

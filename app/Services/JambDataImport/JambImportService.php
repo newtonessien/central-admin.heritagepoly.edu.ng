@@ -395,7 +395,7 @@ class JambImportService
                 $mapping['faculty_id'],
 
             'application_type_id' =>
-                $score > 0 ? 1 : 3,
+                $score > 0 ? 8 : 8,
 
             'created_at' => now(),
 
