@@ -58,6 +58,7 @@ Route::view('dashboard', 'dashboard')
 ->middleware(['auth', 'verified'])
 ->name('dashboard');
 
+Route::redirect('/register', '/login');
 
 /*
 |--------------------------------------------------------------------------
