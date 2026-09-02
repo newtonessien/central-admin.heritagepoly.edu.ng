@@ -10,11 +10,15 @@ use App\Http\Controllers\Export\RegisteredCoursesPdfController;
 use App\Http\Controllers\Export\ResultsHistoryPdfController;
 use App\Http\Controllers\Export\TutorialListExcelController;
 use App\Http\Controllers\Export\TutorialListPdfController;
+use App\Livewire\Admin\ProgramTypeAccess;
 use App\Livewire\Admin\Users;
-use App\Livewire\Admission;
+use App\Livewire\Admissions\AdmissionProcessing;
+use App\Livewire\Admissions\AdmittedStudent;
+use App\Livewire\Admissions\CandidateList;
+use App\Livewire\Admissions\ChangeAcademicSession;
 use App\Livewire\Admissions\ChangeApplicationType;
-use App\Livewire\Admissions\EnrolledStudents\Index;
-use App\Livewire\AdmittedStudent;
+use App\Livewire\Admissions\ChangeDepartment;
+use App\Livewire\Admissions\EnrolledStudents\Enrollment;
 use App\Livewire\Bursary\AdmissionPaymentReport;
 use App\Livewire\Bursary\ApprovePayment;
 use App\Livewire\Bursary\ConfirmPaymentRef;
@@ -91,13 +95,13 @@ Route::get('appearance', Appearance::class)->name('settings.appearance');
 
 Route::prefix('admissions')->middleware('role:admissions-manager|super-admin')->group(function () {
 
-Route::get('/', Admission::class)->name('admissions');
-
+Route::get('processing', AdmissionProcessing::class)->name('admissions.processing');
+Route::get('change-department', ChangeDepartment::class)->name('admissions.change-department');
+Route::get('change-session', ChangeAcademicSession::class)->name('admissions.change-session');
+Route::get('candidates-list', CandidateList::class)->name('admissions.candidates-list');
 Route::get('change-application-type', ChangeApplicationType::class)
 ->name('admissions.change-application-type');
 
-Route::get('enrolled-students', Index::class)
-->name('students.enrolled');
 });
 
 
@@ -115,6 +119,9 @@ Route::get('/', Student::class)
 
 Route::get('admitted', AdmittedStudent::class)
 ->name('students.admitted');
+
+Route::get('enrollment', Enrollment::class)
+->name('students.enrollment');
 
 Route::get('matriculation-register', MatricRegister::class)
 ->name('students.matriculation-register')
@@ -243,6 +250,10 @@ Route::get('/registration/tutorial-list', TutorialList::class)
 
 Route::get('/admin/users', Users::class)
 ->name('admin.users')
+->middleware('role:super-admin');
+
+Route::get('/admin/program-type-access', ProgramTypeAccess::class)
+->name('admin.program-type-access')
 ->middleware('role:super-admin');
 
 

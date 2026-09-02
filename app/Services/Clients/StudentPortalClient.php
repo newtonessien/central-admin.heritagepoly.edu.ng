@@ -960,10 +960,6 @@ public function getCourseRegistrationHistory(
 
 
 //Portal Service Charge
-
-
-
-
 public function getPortalServiceChargeReport(
     array $filters = []
 ): array {
@@ -978,6 +974,212 @@ public function getPortalServiceChargeReport(
         )
         ->throw()
         ->json() ?? [];
+}
+
+
+
+
+public function migrateAdmission(array $payload): array
+{
+    $url = "{$this->baseUrl}/students/migrate-admission";
+
+    Log::info('SP migrate-admission →', [
+        'url'              => $url,
+        'regno'            => $payload['regno'] ?? null,
+        'program_type_id'  => $payload['program_type_id'] ?? null,
+        'program_id'       => $payload['program_id'] ?? null,
+        'faculty_id'       => $payload['faculty_id'] ?? null,
+        'department_id'    => $payload['department_id'] ?? null,
+        'acad_session_id'  => $payload['acad_session_id'] ?? null,
+    ]);
+
+    try {
+
+        $resp = $this->httpClient()
+            ->post($url, $payload);
+
+        $resp->throw();
+
+        $body = $resp->json() ?? $resp->body();
+
+        Log::info('SP migrate-admission ←', [
+            'status' => $resp->status(),
+            'body'   => $body,
+        ]);
+
+        return [
+            'status'    => 'success',
+            'http_code' => $resp->status(),
+            'data'      => $body,
+        ];
+
+    } catch (RequestException $e) {
+
+        $status   = $e->response?->status();
+        $rawBody  = $e->response?->body();
+        $jsonBody = $e->response?->json();
+
+        if ($status === 401) {
+
+            Log::warning(
+                'SP migrate-admission unauthorized',
+                [
+                    'expected_token' =>
+                        substr($this->token, 0, 6) . '...',
+                    'body' =>
+                        $jsonBody ?: $rawBody,
+                ]
+            );
+
+            return [
+                'status'    => 'error',
+                'http_code' => 401,
+                'error' =>
+                    'Unauthorized: check Student Portal service token.',
+                'details' =>
+                    $jsonBody ?: $rawBody,
+            ];
+        }
+
+
+        Log::error(
+            'SP migrate-admission error',
+            [
+                'status' => $status,
+                'json'   => $jsonBody,
+                'body'   => $rawBody,
+            ]
+        );
+
+
+        return [
+            'status'    => 'error',
+            'http_code' => $status,
+            'error'     => $jsonBody ?: $rawBody,
+        ];
+
+
+    } catch (\Throwable $e) {
+
+        Log::critical(
+            'SP migrate-admission unexpected failure',
+            [
+                'exception' => $e->getMessage(),
+            ]
+        );
+
+
+        return [
+            'status'    => 'error',
+            'http_code' => 500,
+            'error'     => $e->getMessage(),
+        ];
+    }
+}
+
+
+/**
+ * Revoke an admitted student in the Student Portal.
+ *
+ * The Student Portal removes the student admission record and
+ * removes the associated user only when that user is no longer
+ * referenced by another student.
+ */
+public function revokeAdmission(string $regno): array
+{
+    $url = "{$this->baseUrl}/students/revoke-admission";
+
+    Log::info('SP revoke-admission →', [
+        'url'   => $url,
+        'regno' => $regno,
+    ]);
+
+    try {
+
+        $resp = $this->httpClient()
+            ->post($url, [
+                'regno' => $regno,
+            ]);
+
+        $resp->throw();
+
+        $body = $resp->json() ?? $resp->body();
+
+        Log::info('SP revoke-admission ←', [
+            'status' => $resp->status(),
+            'regno'  => $regno,
+            'body'   => $body,
+        ]);
+
+        return [
+            'status'    => 'success',
+            'http_code' => $resp->status(),
+            'data'      => $body,
+        ];
+
+    } catch (RequestException $e) {
+
+        $status   = $e->response?->status();
+        $rawBody  = $e->response?->body();
+        $jsonBody = $e->response?->json();
+
+        if ($status === 401) {
+
+            Log::warning(
+                'SP revoke-admission unauthorized',
+                [
+                    'regno' => $regno,
+
+                    'expected_token' =>
+                        substr($this->token, 0, 6) . '...',
+
+                    'body' =>
+                        $jsonBody ?: $rawBody,
+                ]
+            );
+
+            return [
+                'status'    => 'error',
+                'http_code' => 401,
+                'error'     =>
+                    'Unauthorized: check Student Portal service token.',
+                'details' =>
+                    $jsonBody ?: $rawBody,
+            ];
+        }
+
+        Log::error(
+            'SP revoke-admission error',
+            [
+                'regno'  => $regno,
+                'status' => $status,
+                'json'   => $jsonBody,
+                'body'   => $rawBody,
+            ]
+        );
+
+        return [
+            'status'    => 'error',
+            'http_code' => $status,
+            'error'     => $jsonBody ?: $rawBody,
+        ];
+
+    } catch (\Throwable $e) {
+
+        Log::critical(
+            'SP revoke-admission unexpected failure',
+            [
+                'regno'     => $regno,
+                'exception' => $e->getMessage(),
+            ]
+        );
+
+        return [
+            'status'    => 'error',
+            'http_code' => 500,
+            'error'     => $e->getMessage(),
+        ];
+    }
 }
 
 

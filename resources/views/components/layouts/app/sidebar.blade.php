@@ -18,21 +18,29 @@
 </flux:navlist.group>
 
 @role('admissions-manager|super-admin')
-<flux:navlist.group heading="Admissions Management" expandable :expanded="false">
+<flux:navlist.group heading="Pre-Admissions" expandable :expanded="false">
  <flux:navlist.item icon="arrow-down-on-square-stack" :href="route('jamb.import-dashboard')" :current="request()->routeIs('jamb.import-dashboard')" wire:navigate>{{ __('JAMB DataImport') }}</flux:navlist.item>
-<flux:navlist.item icon="academic-cap" :href="route('admissions')" :current="request()->routeIs('admissions')" wire:navigate>{{ __('Applications') }}</flux:navlist.item>
-<flux:navlist.item icon="user-group" :href="route('students.admitted')" :current="request()->routeIs('students.admitted')" wire:navigate>{{ __('Admitted Students') }}</flux:navlist.item>
+<flux:navlist.item icon="academic-cap" :href="route('admissions.candidates-list')" :current="request()->routeIs('admissions.candidates-list')" wire:navigate>{{ __('Candidates List') }}</flux:navlist.item>
 <flux:navlist.item icon="arrow-path-rounded-square" :href="route('admissions.change-application-type')" :current="request()->routeIs('admissions.change-application-type')" wire:navigate>{{ __('Change App. Type') }}</flux:navlist.item>
-<flux:navlist.item icon="book-open" :href="route('students.enrolled')" :current="request()->routeIs('students.enrolled')" wire:navigate>{{ __('Enrolled Students') }}</flux:navlist.item>
+<flux:navlist.item icon="list-bullet" :href="route('admissions.change-department')" :current="request()->routeIs('admissions.change-department')" wire:navigate>{{ __('Change Department') }}</flux:navlist.item>
+<flux:navlist.item icon="arrows-right-left" :href="route('admissions.change-session')" :current="request()->routeIs('admissions.change-session')" wire:navigate>{{ __('Change Session') }}</flux:navlist.item>
+</flux:navlist.group>
+@endrole
+
+@role('admissions-manager|super-admin')
+<flux:navlist.group heading="Admissions" expandable :expanded="false">
+<flux:navlist.item icon="academic-cap" :href="route('admissions.processing')" :current="request()->routeIs('admissions.processing')" wire:navigate>{{ __('Offer Admission') }}</flux:navlist.item>
+<flux:navlist.item icon="user-group" :href="route('students.admitted')" :current="request()->routeIs('students.admitted')" wire:navigate>{{ __('Admitted Students') }}</flux:navlist.item>
+<flux:navlist.item icon="book-open" :href="route('students.enrollment')" :current="request()->routeIs('students.enrollment')" wire:navigate>{{ __('Enroll Student') }}</flux:navlist.item>
 <flux:navlist.item icon="arrow-path" :href="route('students.change-of-course')" :current="request()->routeIs('students.change-of-course')" wire:navigate>{{ __('Change of Course') }}</flux:navlist.item>
+<flux:navlist.item icon="check-circle" :href="route('students.mark-screened')" :current="request()->routeIs('students.mark-screened')" wire:navigate>{{ __('Mark as Screened') }}</flux:navlist.item>
 <flux:navlist.item icon="academic-cap" :href="route('students.matriculation-register')" :current="request()->routeIs('students.matriculation-register')" wire:navigate>{{ __('Matric. Register') }}</flux:navlist.item>
 </flux:navlist.group>
 @endrole
 
 
 @role('student-manager|super-admin')
-<flux:navlist.group heading="Student Management" expandable :expanded="false">
-{{-- <flux:navlist.item icon="book-open" :href="route('students')" :current="request()->routeIs('students')" wire:navigate>{{ __('Students') }}</flux:navlist.item> --}}
+<flux:navlist.group heading="Students" expandable :expanded="false">
 <flux:navlist.item icon="magnifying-glass-circle" :href="route('students.search')" :current="request()->routeIs('students.search')" wire:navigate>{{ __('Student 360° Profile') }}</flux:navlist.item>
 <flux:navlist.item icon="envelope-open" :href="route('students.reset-email')" :current="request()->routeIs('students.reset-email')" wire:navigate>{{ __('Reset Email') }}</flux:navlist.item>
 <flux:navlist.item icon="arrow-path" :href="route('students.change-of-course')" :current="request()->routeIs('students.change-of-course')" wire:navigate>{{ __('Change of Course') }}</flux:navlist.item>
@@ -54,7 +62,7 @@
 @endrole
 
 @role('bursary-manager|super-admin')
-<flux:navlist.group heading="Bursary Management" expandable :expanded="false">
+<flux:navlist.group heading="Finance" expandable :expanded="false">
 <flux:navlist.item icon="magnifying-glass-circle" :href="route('students.search')" :current="request()->routeIs('students.search')" wire:navigate>{{ __('Student 360° Profile') }}</flux:navlist.item>
 <flux:navlist.item icon="credit-card" :href="route('bursary.admission-payment-report')" :current="request()->routeIs('bursary.admission-payment-report')" wire:navigate>{{ __('Forms Payment') }}</flux:navlist.item>
 <flux:navlist.item icon="currency-dollar" :href="route('bursary.student-fee-report')" :current="request()->routeIs('bursary.student-fee-report')" wire:navigate>{{ __('Fee Report') }}</flux:navlist.item>
@@ -75,14 +83,12 @@
 </flux:navlist.group>
 @endrole
 
+
 @role('super-admin')
-<flux:navlist.group heading="Administration">
-    <flux:navlist.item icon="users" :href="route('admin.users')" :current="request()->routeIs('admin.users')" wire:navigate>
-        Manage Users
-    </flux:navlist.item>
-
+<flux:navlist.group heading="Administration"  expandable :expanded="false">
+    <flux:navlist.item icon="users" :href="route('admin.users')" :current="request()->routeIs('admin.users')" wire:navigate> Manage Users </flux:navlist.item>
+<flux:navlist.item icon="user-group" :href="route('admin.program-type-access')" :current="request()->routeIs('admin.program-type-access')" wire:navigate>{{ __('ProgramType Access') }}</flux:navlist.item>
 </flux:navlist.group>
-
 @endrole
 
 

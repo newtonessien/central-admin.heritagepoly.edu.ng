@@ -1,8 +1,9 @@
 <?php
 namespace App\Services\Clients;
 
-use Illuminate\Support\Facades\Log;
 use App\Services\Clients\Concerns\CallsRemoteApi;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Log;
 
 class AdmissionsPortalClient
 {
@@ -328,6 +329,571 @@ public function getProgramTypeByName(string $name): ?array
     return null;
 }
 
+
+
+//------New admits----------
+
+public function admitCandidate(int|string $id): array
+{
+    return $this->httpClient()
+        ->post("{$this->baseUrl}/candidates/{$id}/approve")
+        ->throw()
+        ->json();
+}
+
+public function rejectCandidate(int|string $id, ?string $reason = null): array
+{
+    return $this->httpClient()
+        ->post("{$this->baseUrl}/candidates/{$id}/reject", [
+            'reason' => $reason,
+        ])
+        ->throw()
+        ->json();
+}
+
+
+public function commitAdmission(int|string $id): array
+{
+    $url = "{$this->baseUrl}/candidates/{$id}/commit-admission";
+
+    Log::info('Admissions commit-admission →', [
+        'url' => $url,
+        'candidate_id' => $id,
+    ]);
+
+    try {
+        $resp = $this->httpClient()
+            ->post($url);
+
+        $resp->throw();
+
+        $body = $resp->json() ?? $resp->body();
+
+        Log::info('Admissions commit-admission ←', [
+            'status' => $resp->status(),
+            'candidate_id' => $id,
+            'body' => $body,
+        ]);
+
+        return [
+            'status' => 'success',
+            'http_code' => $resp->status(),
+            'data' => $body,
+        ];
+
+    } catch (\Illuminate\Http\Client\RequestException $e) {
+
+        $status = $e->response?->status();
+        $rawBody = $e->response?->body();
+        $jsonBody = $e->response?->json();
+
+        Log::error('Admissions commit-admission failed', [
+            'candidate_id' => $id,
+            'status' => $status,
+            'json' => $jsonBody,
+            'body' => $rawBody,
+        ]);
+
+        return [
+            'status' => 'error',
+            'http_code' => $status,
+            'error' => $jsonBody ?: $rawBody,
+        ];
+
+    } catch (\Throwable $e) {
+
+        Log::critical('Admissions commit-admission unexpected failure', [
+            'candidate_id' => $id,
+            'exception' => $e->getMessage(),
+        ]);
+
+        return [
+            'status' => 'error',
+            'http_code' => 500,
+            'error' => $e->getMessage(),
+        ];
+    }
+}
+
+
+/**
+ * Revoke an admission in the Admissions Portal.
+ *
+ * This should only be called after the corresponding
+ * Student Portal admission has been successfully revoked.
+ */
+public function revokeAdmission(int|string $candidateId): array
+{
+    $url = "{$this->baseUrl}/candidates/{$candidateId}/revoke-admission";
+
+    Log::info('Admissions revoke admission →', [
+        'url'          => $url,
+        'candidate_id' => $candidateId,
+    ]);
+
+    try {
+
+        $resp = $this->httpClient()
+            ->post($url);
+
+        $resp->throw();
+
+        $body = $resp->json() ?? $resp->body();
+
+        Log::info('Admissions revoke admission ←', [
+            'status'       => $resp->status(),
+            'candidate_id' => $candidateId,
+            'body'         => $body,
+        ]);
+
+        return [
+            'status'    => 'success',
+            'http_code' => $resp->status(),
+            'data'      => $body,
+        ];
+
+    } catch (RequestException $e) {
+
+        $status   = $e->response?->status();
+        $rawBody  = $e->response?->body();
+        $jsonBody = $e->response?->json();
+
+        if ($status === 401) {
+
+            Log::warning(
+                'Admissions revoke admission unauthorized',
+                [
+                    'candidate_id' => $candidateId,
+                    'expected_token' =>
+                        substr($this->token, 0, 6) . '...',
+                    'body' =>
+                        $jsonBody ?: $rawBody,
+                ]
+            );
+
+            return [
+                'status'    => 'error',
+                'http_code' => 401,
+                'error'     => 'Unauthorized: check Admissions Portal service token.',
+                'details'   => $jsonBody ?: $rawBody,
+            ];
+        }
+
+        Log::error(
+            'Admissions revoke admission error',
+            [
+                'candidate_id' => $candidateId,
+                'status'       => $status,
+                'json'         => $jsonBody,
+                'body'         => $rawBody,
+            ]
+        );
+
+        return [
+            'status'    => 'error',
+            'http_code' => $status,
+            'error'     => $jsonBody ?: $rawBody,
+        ];
+
+    } catch (\Throwable $e) {
+
+        Log::critical(
+            'Admissions revoke admission unexpected failure',
+            [
+                'candidate_id' => $candidateId,
+                'exception'    => $e->getMessage(),
+            ]
+        );
+
+        return [
+            'status'    => 'error',
+            'http_code' => 500,
+            'error'     => $e->getMessage(),
+        ];
+    }
+}
+
+/**
+ * Change a candidate's faculty, department and programme
+ * in the Admissions Portal.
+ *
+ * This does NOT admit, reject or migrate the candidate.
+ */
+public function changeDepartment(
+    int|string $candidateId,
+    int $facultyId,
+    int $departmentId,
+    int $programId,
+): array {
+    $url = "{$this->baseUrl}/candidates/{$candidateId}/change-department";
+
+    $payload = [
+        'faculty_id'    => $facultyId,
+        'department_id' => $departmentId,
+        'program_id'    => $programId,
+    ];
+
+    Log::info('Admissions change-department →', [
+        'url'           => $url,
+        'candidate_id'  => $candidateId,
+        'payload'       => $payload,
+    ]);
+
+    try {
+
+        $resp = $this->httpClient()
+            ->post($url, $payload);
+
+        $resp->throw();
+
+        $body = $resp->json() ?? $resp->body();
+
+        Log::info('Admissions change-department ←', [
+            'status'       => $resp->status(),
+            'candidate_id' => $candidateId,
+            'body'         => $body,
+        ]);
+
+        return [
+            'status'    => 'success',
+            'http_code' => $resp->status(),
+            'data'      => $body,
+        ];
+
+    } catch (RequestException $e) {
+
+        $status   = $e->response?->status();
+        $rawBody  = $e->response?->body();
+        $jsonBody = $e->response?->json();
+
+        if ($status === 401) {
+
+            Log::warning(
+                'Admissions change-department unauthorized',
+                [
+                    'candidate_id' => $candidateId,
+
+                    'expected_token' =>
+                        substr($this->token, 0, 6) . '...',
+
+                    'body' =>
+                        $jsonBody ?: $rawBody,
+                ]
+            );
+
+            return [
+                'status'    => 'error',
+                'http_code' => 401,
+                'error'     =>
+                    'Unauthorized: check Admissions Portal service token.',
+                'details'   =>
+                    $jsonBody ?: $rawBody,
+            ];
+        }
+
+        Log::error(
+            'Admissions change-department error',
+            [
+                'candidate_id' => $candidateId,
+                'status'       => $status,
+                'json'         => $jsonBody,
+                'body'         => $rawBody,
+            ]
+        );
+
+        return [
+            'status'    => 'error',
+            'http_code' => $status,
+            'error'     => $jsonBody ?: $rawBody,
+        ];
+
+    } catch (\Throwable $e) {
+
+        Log::critical(
+            'Admissions change-department unexpected failure',
+            [
+                'candidate_id' => $candidateId,
+                'exception'    => $e->getMessage(),
+            ]
+        );
+
+        return [
+            'status'    => 'error',
+            'http_code' => 500,
+            'error'     => $e->getMessage(),
+        ];
+    }
+}
+
+
+
+/**
+ * Get a candidate by registration number.
+ *
+ * @param  string  $regno
+ * @param  string  $mode
+ * @return array
+ */
+public function candidateByRegno(
+    string $regno,
+    string $mode = 'details'
+): array {
+    $url = "{$this->baseUrl}/candidates/by-regno/" .
+        rawurlencode(trim($regno));
+
+    Log::info('Admissions candidate by regno →', [
+        'url'   => $url,
+        'regno' => $regno,
+        'mode'  => $mode,
+    ]);
+
+    try {
+
+        $response = $this->httpClient()
+            ->get($url, [
+                'mode' => $mode,
+            ]);
+
+        $response->throw();
+
+        $body = $response->json();
+
+        Log::info('Admissions candidate by regno ←', [
+            'status' => $response->status(),
+            'regno'  => $regno,
+            'body'   => $body,
+        ]);
+
+        return [
+            'status'    => 'success',
+            'http_code' => $response->status(),
+            'data'      => $body,
+        ];
+
+    } catch (RequestException $e) {
+
+        $status   = $e->response?->status();
+        $rawBody  = $e->response?->body();
+        $jsonBody = $e->response?->json();
+
+        if ($status === 404) {
+
+            Log::warning(
+                'Admissions candidate by regno not found',
+                [
+                    'regno' => $regno,
+                    'body'  => $jsonBody ?: $rawBody,
+                ]
+            );
+
+            return [
+                'status'    => 'error',
+                'http_code' => 404,
+                'error'     => 'Candidate not found.',
+                'details'   => $jsonBody ?: $rawBody,
+            ];
+        }
+
+        if ($status === 401) {
+
+            Log::warning(
+                'Admissions candidate by regno unauthorized',
+                [
+                    'regno' => $regno,
+                    'expected_token' =>
+                        substr($this->token, 0, 6) . '...',
+                    'body' =>
+                        $jsonBody ?: $rawBody,
+                ]
+            );
+
+            return [
+                'status'    => 'error',
+                'http_code' => 401,
+                'error'     =>
+                    'Unauthorized: check Admissions Portal service token.',
+                'details'   =>
+                    $jsonBody ?: $rawBody,
+            ];
+        }
+
+        Log::error(
+            'Admissions candidate by regno error',
+            [
+                'regno'  => $regno,
+                'status' => $status,
+                'json'   => $jsonBody,
+                'body'   => $rawBody,
+            ]
+        );
+
+        return [
+            'status'    => 'error',
+            'http_code' => $status,
+            'error'     => $jsonBody ?: $rawBody,
+        ];
+
+    } catch (\Throwable $e) {
+
+        Log::critical(
+            'Admissions candidate by regno unexpected failure',
+            [
+                'regno'     => $regno,
+                'exception' => $e->getMessage(),
+            ]
+        );
+
+        return [
+            'status'    => 'error',
+            'http_code' => 500,
+            'error'     => $e->getMessage(),
+        ];
+    }
+}
+
+
+/**
+ * Change a candidate's academic session.
+ *
+ * This operation only updates acad_session_id
+ * in the Admissions Portal.
+ *
+ * It does not admit, reject, revoke or migrate
+ * the candidate to the Student Portal.
+ */
+public function changeAcademicSession(
+    int $candidateId,
+    int $acadSessionId
+): array {
+    $url = "{$this->baseUrl}/candidates/{$candidateId}/change-session";
+
+    $payload = [
+        'acad_session_id' => $acadSessionId,
+    ];
+
+    Log::info('Admissions change academic session →', [
+        'url'             => $url,
+        'candidate_id'    => $candidateId,
+        'acad_session_id' => $acadSessionId,
+    ]);
+
+    try {
+
+        $response = $this->httpClient()
+            ->patch($url, $payload);
+
+        $response->throw();
+
+        $body = $response->json() ?? $response->body();
+
+        Log::info('Admissions change academic session ←', [
+            'status'          => $response->status(),
+            'candidate_id'    => $candidateId,
+            'acad_session_id' => $acadSessionId,
+            'body'            => $body,
+        ]);
+
+        return [
+            'status'    => 'success',
+            'http_code' => $response->status(),
+            'data'      => $body,
+        ];
+
+    } catch (RequestException $e) {
+
+        $status   = $e->response?->status();
+        $rawBody  = $e->response?->body();
+        $jsonBody = $e->response?->json();
+
+        if ($status === 401) {
+
+            Log::warning(
+                'Admissions change academic session unauthorized',
+                [
+                    'candidate_id' =>
+                        $candidateId,
+
+                    'acad_session_id' =>
+                        $acadSessionId,
+
+                    'expected_token' =>
+                        substr($this->token, 0, 6) . '...',
+
+                    'body' =>
+                        $jsonBody ?: $rawBody,
+                ]
+            );
+
+            return [
+                'status'    => 'error',
+                'http_code' => 401,
+                'error'     =>
+                    'Unauthorized: check Admissions Portal service token.',
+                'details'   =>
+                    $jsonBody ?: $rawBody,
+            ];
+        }
+
+        Log::error(
+            'Admissions change academic session error',
+            [
+                'candidate_id' =>
+                    $candidateId,
+
+                'acad_session_id' =>
+                    $acadSessionId,
+
+                'status' =>
+                    $status,
+
+                'json' =>
+                    $jsonBody,
+
+                'body' =>
+                    $rawBody,
+            ]
+        );
+
+        return [
+            'status'    => 'error',
+            'http_code' => $status,
+            'error'     => $jsonBody ?: $rawBody,
+        ];
+
+    } catch (\Throwable $e) {
+
+        Log::critical(
+            'Admissions change academic session unexpected failure',
+            [
+                'candidate_id' =>
+                    $candidateId,
+
+                'acad_session_id' =>
+                    $acadSessionId,
+
+                'exception' =>
+                    $e->getMessage(),
+            ]
+        );
+
+        return [
+            'status'    => 'error',
+            'http_code' => 500,
+            'error'     => $e->getMessage(),
+        ];
+    }
+}
+
+public function getApplicationTypesByProgramType(int $programTypeId): array
+{
+    $resp = $this->httpClient()
+        ->get("{$this->baseUrl}/application-types", [
+            'program_type_id' => $programTypeId,
+        ])
+        ->throw();
+
+    return $resp->json('data') ?? [];
+}
 
 
 }

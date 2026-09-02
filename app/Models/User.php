@@ -81,4 +81,9 @@ protected static function booted()
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
     }
+
+        public function programTypeAccess(): HasMany
+{
+    return $this->hasMany(UserProgramType::class);
+}
 }

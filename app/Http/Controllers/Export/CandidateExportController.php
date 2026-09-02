@@ -12,330 +12,256 @@ use Spatie\SimpleExcel\SimpleExcelWriter;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 
-
-//use Illuminate\Routing\Attributes\Middleware as RouteMiddleware; // ⬅️ import this
-
-//#[RouteMiddleware('export.filters')]  // ✅ correct spelling + correct place (constructor)
 class CandidateExportController extends Controller
 {
-
-
     public function excel(Request $request)
     {
-        $this->ensureHasFilters($request);             // belt & suspenders
-        [$rows,$name] = $this->fetchRows($request);
-        return $this->xlsx($rows,$name);
+        set_time_limit(120);
+        $this->ensureHasFilters($request);
+        [$rows, $name] = $this->fetchRows($request);
+       // $name = $this->exportFilename($request);
+        return $this->xlsx($rows, $name);   // $rows = generator
     }
 
     public function csv(Request $request)
     {
         $this->ensureHasFilters($request);
-        [$rows,$name] = $this->fetchRows($request);
-        return $this->csvOut($rows,$name);
+        [$rows, $name] = $this->fetchRows($request);
+        return $this->csvOut($rows, $name); // $rows = generator
     }
 
-    public function pdf(Request $request)
-    {
-        $this->ensureHasFilters($request);
-        [$rows,$name] = $this->fetchRows($request);
-        return $this->pdfOut($rows,$name);
+     public function pdf(Request $request)
+{
+    $this->ensureHasFilters($request);
+
+    [$rows, $name] = $this->fetchRows($request);
+
+    $pdfRows = [];
+
+    foreach ($rows as $row) {
+        $pdfRows[] = $this->sanitizeRow($row);
     }
+
+    return $this->pdfOut($pdfRows, $name);
+}
 
     private function ensureHasFilters(Request $request): void
-    {
-        $status = $request->query('status');
-        $q      = trim((string) $request->query('q', ''));
+{
+    $hasAny =
+        (int) $request->query('acad_session_id', 0) > 0 ||
+        (int) $request->query('program_type_id', 0) > 0 ||
+        (int) $request->query('application_type_id', 0) > 0 ||
+        (int) $request->query('faculty_id', 0) > 0 ||
+        (int) $request->query('department_id', 0) > 0 ||
+        (int) $request->query('program_id', 0) > 0 ||
+        $request->query('status') !== null ||
+        trim((string) $request->query('q', '')) !== '' ||
+        $request->filled('date_from') ||
+        $request->filled('date_to');
 
-        $hasAny =
-            (int) $request->query('program_type_id', 0) > 0 ||
-            (int) $request->query('faculty_id', 0)      > 0 ||
-            (int) $request->query('department_id', 0)   > 0 ||
-            (int) $request->query('program_id', 0)      > 0 ||
-            in_array($status, ['pending','approved'], true) ||
-            $q !== '';
-
-        if (! $hasAny) {
-            throw ValidationException::withMessages([
-                'filters' => 'Please apply at least one filter or search before exporting.',
-            ]);
-        }
+    if (!$hasAny) {
+        throw ValidationException::withMessages([
+            'filters' => 'Please apply at least one filter or search before exporting.',
+        ]);
     }
+}
 
     /**
-     * Pulls all pages from Admissions API and maps them to flat export rows.
-     * Adds guards: require at least one filter/search; abort if no records.
+     * Pulls all pages from Admissions API as generator.
      */
-private function fetchRows(Request $request): array
+    private function fetchRows(Request $request): array
+    {
+
+          $data = $request->validate([
+    'acad_session_id'      => ['nullable', 'integer', 'min:1'],
+    'program_type_id'      => ['nullable', 'integer', 'min:1'],
+    'application_type_id'  => ['nullable', 'integer', 'min:1'],
+    'faculty_id'           => ['nullable', 'integer', 'min:1'],
+    'department_id'        => ['nullable', 'integer', 'min:1'],
+    'program_id'           => ['nullable', 'integer', 'min:1'],
+
+    'status' => [
+        'nullable',
+        Rule::in([
+            'submitted',
+            'registered',
+            'paid',
+            'payment_pending',
+            'draft',
+            'admitted',
+            'any',
+            '',
+        ]),
+    ],
+
+    'q' => ['nullable', 'string', 'max:200'],
+
+    'date_from' => ['nullable', 'date'],
+    'date_to'   => ['nullable', 'date', 'after_or_equal:date_from'],
+     ]);
+
+        $apiUrl = rtrim((string) config('services.admissions.url'), '/');
+        $token  = (string) config('services.admissions.token');
+        $listUrl = $apiUrl . '/candidates';
+
+        $getJson = function (string $url, array $query = []) use ($token): array {
+            $req = Http::timeout(30);
+            if ($token !== '') $req = $req->withToken($token);
+            return $req->get($url, $query)->throw()->json();
+        };
+
+            $params = array_filter([
+    'acad_session_id'     => $data['acad_session_id'] ?? null,
+    'program_type_id'     => $data['program_type_id'] ?? null,
+    'application_type_id' => $data['application_type_id'] ?? null,
+    'faculty_id'          => $data['faculty_id'] ?? null,
+    'department_id'       => $data['department_id'] ?? null,
+    'program_id'          => $data['program_id'] ?? null,
+    'status'              => $data['status'] ?? null,
+    'q'                   => $data['q'] ?? null,
+    'date_from'           => $data['date_from'] ?? null,
+    'date_to'             => $data['date_to'] ?? null,
+
+
+    'per_page'            => 200,
+          ], fn ($value) => $value !== null && $value !== '');
+
+$generator = function () use ($listUrl, $getJson, $params) {
+
+    $page = 1;
+
+    while (true) {
+
+        $query = array_merge(
+            $params,
+            [
+                'page' => $page,
+            ]
+        );
+
+        $json = $getJson(
+            $listUrl,
+            $query
+        );
+
+        foreach ($json['data'] ?? [] as $candidate) {
+            yield $this->transformCandidate($candidate);
+        }
+
+        $currentPage = (int) (
+            $json['meta']['current_page'] ?? $page
+        );
+
+        $lastPage = (int) (
+            $json['meta']['last_page'] ?? $currentPage
+        );
+
+        if ($currentPage >= $lastPage) {
+            break;
+        }
+
+        $page = $currentPage + 1;
+    }
+};
+
+
+$name = $this->exportFilename($request);
+
+        return [$generator(), $name];
+    }
+
+ private function sanitizeRow(array $row): array
 {
-    $status = $request->query('status');
-    $q      = trim((string) $request->query('q', ''));
-
-    $hasAny =
-        (int) $request->query('program_type_id', 0) > 0 ||
-        (int) $request->query('faculty_id', 0)      > 0 ||
-        (int) $request->query('department_id', 0)   > 0 ||
-        (int) $request->query('program_id', 0)      > 0 ||
-        in_array($status, ['pending','approved'], true) ||
-        $q !== '';
-
-    if (! $hasAny) {
-        throw ValidationException::withMessages([
-            'filters' => 'Please apply at least one filter or search before exporting.',
-        ]);
-    }
-
-    // 1) Validate filters (same as UI)
-    $data = $request->validate([
-        'program_type_id' => ['nullable','integer','min:1'],
-        'faculty_id'      => ['nullable','integer','min:1'],
-        'department_id'   => ['nullable','integer','min:1'],
-        'program_id'      => ['nullable','integer','min:1'],
-        'status'          => ['nullable', Rule::in(['pending','approved','any',''])],
-        'q'               => ['nullable','string','max:200'],
-    ]);
-
-    // 2) Guard again via normalized data
-    $active = [
-        'program_type_id' => $data['program_type_id'] ?? null,
-        'faculty_id'      => $data['faculty_id'] ?? null,
-        'department_id'   => $data['department_id'] ?? null,
-        'program_id'      => $data['program_id'] ?? null,
-        'status'          => $data['status'] ?? null,
-        'q'               => isset($data['q']) ? trim($data['q']) : null,
-    ];
-
-    $hasActive = collect($active)->contains(function ($v, $k) {
-        if ($k === 'status') {
-            return in_array($v, ['pending','approved'], true);
+    return array_map(function ($val) {
+        if (is_string($val)) {
+            return mb_convert_encoding($val, 'UTF-8', 'UTF-8');
         }
-        return !is_null($v) && $v !== '';
-    });
-
-    if (! $hasActive) {
-        throw ValidationException::withMessages([
-            'filters' => 'Please apply at least one filter or search before exporting.',
-        ]);
-    }
-
-    // 3) Build bases from services.admissions.url
-    $apiUrl = rtrim((string) config('services.admissions.url'), '/');
-    $token  = (string) config('services.admissions.token');
-
-    $u       = parse_url($apiUrl);
-    $origin  = ($u['scheme'] ?? 'http') . '://' . ($u['host'] ?? 'localhost') . (isset($u['port']) ? ':' . $u['port'] : '');
-    $apiBase = $apiUrl;
-    $listUrl = $apiBase . '/candidates';
-
-    $makeAbsolute = function (string $url) use ($origin, $apiBase, $listUrl): string {
-        $url = trim($url);
-        if ($url === '') return $listUrl;
-        if (preg_match('~^https?://~i', $url)) return $url;
-        if (str_starts_with($url, '?'))        return $listUrl . $url;
-        if (str_starts_with($url, '/api/'))    return $origin . $url;
-        if (str_starts_with($url, 'api/'))     return $origin . '/' . $url;
-        if (str_starts_with($url, '/'))        return $origin . $url;
-        return $apiBase . '/' . ltrim($url, '/');
-    };
-
-    $getJson = function (string $url, array $query = []) use ($token, $makeAbsolute): array {
-        $abs = $makeAbsolute($url);
-        $req = Http::timeout(30);
-        if ($token !== '') $req = $req->withToken($token);
-        return $req->get($abs, $query)->throw()->json();
-    };
-
-    // 4) Initial query
-    $params = array_filter([
-        'program_type_id' => $data['program_type_id'] ?? null,
-        'faculty_id'      => $data['faculty_id'] ?? null,
-        'department_id'   => $data['department_id'] ?? null,
-        'program_id'      => $data['program_id'] ?? null,
-        'status'          => $data['status'] ?? null,
-        'q'               => $active['q'] ?? null,
-        'per_page'        => 100,
-    ], fn($v) => $v !== null && $v !== '');
-
-    $rows = [];
-
-    // 5) First page
-    $json = $getJson($listUrl, $params);
-
-    $collect = function (array $json) use (&$rows) {
-        foreach ($json['data'] ?? [] as $c) {
-            $olevel = collect($c['olevel_details'] ?? [])
-                ->map(function ($sit) {
-                    $title = ($sit['sitting'] ?? '') ?: (($sit['is_sitting'] ?? false) ? 'Second Sitting' : 'First Sitting');
-                    $subs  = collect($sit['results'] ?? [])
-                            ->map(fn($r) => ($r['code'] ?? $r['subject'] ?? '') . '=' . ($r['grade'] ?? ''))
-                            ->implode(' | ');
-                    return trim($title . ' : ' . $subs);
-                })
-                ->filter()
-                ->implode('  ||  ');
-
-            $rows[] = [
-                'RegNo'          => $c['regno'] ?? '',
-                'Name'           => $c['name'] ?? '',
-                'Sex'            => $c['sex'] ?? '',
-                'State'          => $c['state'] ?? '',
-                'Olevel Details' => $olevel,
-                'Status'         => (isset($c['status']) ? $c['status'] : (($c['is_admitted'] ?? 0) ? 'approved' : 'pending')),
-            ];
-        }
-    };
-
-    $collect($json);
-
-    // 6) Follow pagination
-    $next = $json['links']['next'] ?? null;
-    while (!empty($next)) {
-        $json = $getJson($next);
-        $collect($json);
-        $next = $json['links']['next'] ?? null;
-    }
-
-    // 7) Guard: no data for the selected filters
-    if (count($rows) === 0) {
-        throw ValidationException::withMessages([
-            'filters' => 'No records found for the selected filters/search.',
-        ]);
-    }
-
-    // 8) Filename with NAMES (fallback to ids)
-    $tags = [];
-
-    if (in_array(($data['status'] ?? null), ['pending','approved'], true)) {
-        $tags[] = 'status-' . $data['status'];
-    }
-
-    $slug = function (?string $val): string {
-        $s = Str::slug((string) $val, '-');
-        return $s !== '' ? Str::limit($s, 50, '') : '';
-    };
-
-    $ptName = $request->query('program_type_name');
-    $facNm  = $request->query('faculty_name');
-    $depNm  = $request->query('department_name');
-    $prgNm  = $request->query('program_name');
-
-    if ($pt = $slug($ptName)) { $tags[] = 'program-type-' . $pt; }
-    elseif (!empty($data['program_type_id'])) { $tags[] = 'program-type-' . (int) $data['program_type_id']; }
-
-    if ($fac = $slug($facNm)) { $tags[] = 'faculty-' . $fac; }
-    elseif (!empty($data['faculty_id'])) { $tags[] = 'faculty-' . (int) $data['faculty_id']; }
-
-    if ($dep = $slug($depNm)) { $tags[] = 'department-' . $dep; }
-    elseif (!empty($data['department_id'])) { $tags[] = 'department-' . (int) $data['department_id']; }
-
-    if ($prg = $slug($prgNm)) { $tags[] = 'program-' . $prg; }
-    elseif (!empty($data['program_id'])) { $tags[] = 'program-' . (int) $data['program_id']; }
-
-    $name = 'candidates_' . now()->format('Ymd_His') . (count($tags) ? '__' . implode('_', $tags) : '');
-
-    return [$rows, $name];
+        return $val;
+    }, $row);
 }
 
 
-   private function xlsx(array $rows, string $name)
+
+private function xlsx(iterable $rows, string $name)
 {
-    $lines = $this->buildHeaderLinesFromRequest();
+    $writer = SimpleExcelWriter::streamDownload(
+        $name . '.xlsx'
+    );
 
-    // Define table columns (keep it consistent with your $rows shape)
-    $cols = ['RegNo','Name','Sex','State','Olevel Details','Status'];
+    foreach ($rows as $row) {
+        $writer->addRow(
+            $this->sanitizeRow($row)
+        );
+    }
 
-    return response()->streamDownload(function () use ($rows, $name, $lines, $cols) {
-        $writer = \Spatie\SimpleExcel\SimpleExcelWriter::streamDownload($name . '.xlsx');
-
-        // ── Preamble (each line goes into the first column; others empty)
-        foreach ($lines as $line) {
-            $writer->addRow([$line, '', '', '', '', '']);
-        }
-
-        // Blank spacer row
-        $writer->addRow(['', '', '', '', '', '']);
-
-        // Table header row (we write it ourselves instead of addHeader())
-        $writer->addRow($cols);
-
-        // Table data rows (ordered to match $cols)
-        foreach ($rows as $r) {
-            $writer->addRow([
-                $r['RegNo'] ?? '',
-                $r['Name'] ?? '',
-                $r['Sex'] ?? '',
-                $r['State'] ?? '',
-                $r['Olevel Details'] ?? '',
-                $r['Status'] ?? '',
-            ]);
-        }
-
-        // flush to browser
-        $writer->toBrowser();
-    }, $name . '.xlsx', [
-        'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    ]);
+    $writer->close();
 }
 
-
- private function csvOut(array $rows, string $name)
+private function csvOut(iterable $rows, string $name)
 {
     $lines = $this->buildHeaderLinesFromRequest();
-    $cols  = ['RegNo','Name','Sex','State','Olevel Details','Status'];
+
+   $cols = [
+    'RegNo',
+    'Name',
+    'Sex',
+    'State',
+    'Program Type',
+    'Application Type',
+    'JAMB No',
+    'JAMB Score',
+    'Qualification(s)',
+    'Submitted At',
+];
 
     return response()->streamDownload(function () use ($rows, $name, $lines, $cols) {
-        $writer = \Spatie\SimpleExcel\SimpleExcelWriter::streamDownload($name . '.csv');
+        $writer = SimpleExcelWriter::streamDownload($name . '.csv');
 
-        // Preamble lines
         foreach ($lines as $line) {
-            $writer->addRow([$line, '', '', '', '', '']);
+            //$writer->addRow([$line, '', '', '', '', '']);
+            $writer->addRow(array_merge([$line], array_fill(0, count($cols) - 1, '')));
         }
-
-        // Blank spacer
         $writer->addRow(['', '', '', '', '', '']);
-
-        // Header row
         $writer->addRow($cols);
 
-        // Data
-        foreach ($rows as $r) {
-            $writer->addRow([
-                $r['RegNo'] ?? '',
-                $r['Name'] ?? '',
-                $r['Sex'] ?? '',
-                $r['State'] ?? '',
-                $r['Olevel Details'] ?? '',
-                $r['Status'] ?? '',
-            ]);
-        }
+        foreach ($rows as $row) {
+    $writer->addRow(
+        $this->sanitizeRow(
+            array_values($row)
+        )
+    );
+       }
 
-        $writer->toBrowser();
+
+
+        $writer->close();
     }, $name . '.csv', [
         'Content-Type' => 'text/csv; charset=UTF-8',
     ]);
 }
 
-
-    private function pdfOut(array $rows, string $name)
+private function pdfOut(array $rows, string $name)
 {
+
     $req         = request();
     $generatedAt = now()->timezone('Africa/Lagos');
 
-    // Use names from query if available
     $pt  = trim((string) $req->query('program_type_name', ''));
     $fac = trim((string) $req->query('faculty_name', ''));
     $dep = trim((string) $req->query('department_name', ''));
     $pro = trim((string) $req->query('program_name', ''));
-
-    // Session label (or override via ?session=…)
-    //$session = $this->sessionLabel($req);
+    $session = trim((string) $req->query('acad_session_name', ''));
+    $appType = trim((string) $req->query('application_type_name', ''));
 
     $hdr = [
         'school'     => 'Heritage Polytechnic',
+        'session'          => $session ?: null,
         'faculty'    => $fac !== '' ? 'Faculty of ' . $fac : null,
         'department' => $dep !== '' ? 'Department of ' . $dep : null,
         'program'    => $pro !== '' ? 'Course of Study: ' . $pro : null,
         'ptype'      => $pt ?: null,
-        //'session'    => "Admission list – {$session} Session",
+        'application_type' => $appType ?: null,
+
     ];
 
     $pdf = Pdf::loadView('exports.candidates_pdf', [
@@ -344,7 +270,6 @@ private function fetchRows(Request $request): array
             'hdr'          => $hdr,
         ])->setPaper('a4', 'landscape');
 
-    // render + footer (timestamp + page numbers)
     $dompdf  = $pdf->getDomPDF();
     $dompdf->render();
 
@@ -353,10 +278,10 @@ private function fetchRows(Request $request): array
     $h       = $canvas->get_height();
     $metrics = $dompdf->getFontMetrics();
     $font    = $metrics->getFont('DejaVu Sans');
-    $size    =  9; // or just 9
+    $size    = 9;
 
-    $canvas->page_text(24,       $h - 18, 'Generated: '.$generatedAt->format('Y-m-d H:i'), $font, $size, [0,0,0]);
-    $canvas->page_text($w - 140, $h - 18, 'Page {PAGE_NUM} of {PAGE_COUNT}',   $font, $size, [0,0,0]);
+    $canvas->page_text(24, $h - 18, 'Generated: '.$generatedAt->format('Y-m-d H:i'), $font, $size, [0,0,0]);
+    $canvas->page_text($w - 140, $h - 18, 'Page {PAGE_NUM} of {PAGE_COUNT}', $font, $size, [0,0,0]);
 
     return response($dompdf->output(), 200, [
         'Content-Type'        => 'application/pdf',
@@ -365,38 +290,228 @@ private function fetchRows(Request $request): array
     ]);
 }
 
-private function buildHeaderLinesFromRequest(): array
-{
-    $req = request();
 
-    // These names are coming from your Blade exportParams
-    $school = 'Heritage Polytechnic';
-    $faculty = trim((string) $req->query('faculty_name', ''));
-    $department = trim((string) $req->query('department_name', ''));
-    $program = trim((string) $req->query('program_name', ''));
-    $ptype = trim((string) $req->query('program_type_name', ''));
+    private function buildHeaderLinesFromRequest(): array
+    {
+        $req = request();
 
-    // Session label, or override with ?session=...
-    $session = $req->query('session');
-    if (!$session) {
-        $y = (int) now()->year;
-        $m = (int) now()->month;
-        $start = ($m >= 8) ? $y : $y - 1;
-        $session = $start . '/' . ($start + 1);
+        $school     = 'Heritage Polytechnic';
+        $faculty    = trim((string) $req->query('faculty_name', ''));
+        $department = trim((string) $req->query('department_name', ''));
+        $program    = trim((string) $req->query('program_name', ''));
+        $ptype      = trim((string) $req->query('program_type_name', ''));
+
+        $session = $req->query('session');
+        if (!$session) {
+            $y = (int) now()->year;
+            $m = (int) now()->month;
+            $start = ($m >= 8) ? $y : $y - 1;
+            $session = $start . '/' . ($start + 1);
+        }
+
+        $lines = [];
+        $lines[] = $school;
+        if ($faculty !== '')     $lines[] = 'Faculty of ' . $faculty;
+        if ($department !== '')  $lines[] = 'Department of ' . $department;
+        if ($program !== '')     $lines[] = 'Course of Study: ' . $program;
+        if ($ptype !== '')       $lines[] = 'Programme Type: ' . $ptype;
+        $lines[] = 'Admission list – ' . $session . ' Session';
+
+        return $lines;
     }
 
-    $lines = [];
-    $lines[] = $school;
-    if ($faculty !== '')     $lines[] = 'Faculty of ' . $faculty;
-    if ($department !== '')  $lines[] = 'Department of ' . $department;
-    if ($program !== '')     $lines[] = 'Course of Study: ' . $program;
-    if ($ptype !== '')       $lines[] = 'Programme Type: ' . $ptype; // optional line
-    $lines[] = 'Admission list – ' . $session . ' Session';
 
-    return $lines;
+   private function transformCandidate(array $candidate): array
+{
+    $qualification = $this->formatQualifications($candidate);
+
+    return [
+        'RegNo' => $candidate['regno'] ?? '',
+        'Name' => $candidate['name'] ?? '',
+        'Sex' => $candidate['sex'] ?? '',
+        'State' => $candidate['state'] ?? '',
+
+        'Program Type' => $candidate['program_type'] ?? '',
+        'Application Type' => $candidate['application_type'] ?? '',
+
+        'JAMB No' => ($candidate['is_jamb_application'] ?? false)
+            ? ($candidate['jamb_no'] ?? '')
+            : '',
+
+        'JAMB Score' => ($candidate['is_jamb_application'] ?? false)
+            ? ($candidate['jamb_score'] ?? '')
+            : '',
+
+        'Qualification(s)' => $qualification,
+
+        //'Status' => $candidate['status'] ?? '',
+
+        'Submitted At' => $candidate['submitted_at'] ?? '',
+    ];
+}
+
+private function formatQualifications(array $candidate): string
+{
+    $qualifications = [];
+
+    /*
+    |--------------------------------------------------------------------------
+    | O'Level
+    |--------------------------------------------------------------------------
+    */
+
+    foreach ($candidate['olevel_details'] ?? [] as $sitting) {
+
+        $examType = trim((string) ($sitting['exam_type'] ?? ''));
+
+        $examYear = $sitting['exam_year'] ?? null;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Exam label
+        |--------------------------------------------------------------------------
+        |
+        | Example:
+        | WASSCE-2025
+        | NECO-2026
+        |
+        */
+
+        $label = collect([
+            $examType,
+            $examYear,
+        ])
+            ->filter(fn ($value) => $value !== null && $value !== '')
+            ->implode('-');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Subjects
+        |--------------------------------------------------------------------------
+        */
+
+        $subjects = collect($sitting['results'] ?? [])
+            ->map(function (array $result) {
+
+                $code = $result['code']
+                    ?? $result['subject']
+                    ?? null;
+
+                $grade = $result['grade'] ?? null;
+
+                if (!$code) {
+                    return null;
+                }
+
+                return $code . '=' . ($grade ?? '—');
+            })
+            ->filter()
+            ->implode(' | ');
+
+        if ($label !== '' && $subjects !== '') {
+            $qualifications[] = $label . ': ' . $subjects;
+        } elseif ($label !== '') {
+            $qualifications[] = $label;
+        } elseif ($subjects !== '') {
+            $qualifications[] = $subjects;
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Additional Qualification
+    |--------------------------------------------------------------------------
+    */
+
+    $additional = $this->formatAdditionalQualification($candidate);
+
+    if ($additional !== '') {
+        $qualifications[] = $additional;
+    }
+
+    return implode(' || ', $qualifications);
+}
+
+private function formatAdditionalQualification(array $candidate): string
+{
+    if (($candidate['application_type_code'] ?? null) !== 'DE') {
+        return '';
+    }
+
+    $qualifications = $candidate['additional_qualifications'] ?? [];
+
+    if (empty($qualifications)) {
+        return '';
+    }
+
+    if (!is_array($qualifications)) {
+        return (string) $qualifications;
+    }
+
+    return collect($qualifications)
+        ->map(function ($qualification) {
+
+            if (is_string($qualification)) {
+                return $qualification;
+            }
+
+            return collect([
+                $qualification['qualification'] ?? null,
+                $qualification['institution_name'] ?? null,
+                $qualification['course_of_study'] ?? null,
+                $qualification['class_of_study'] ?? null,
+                $qualification['additional_info'] ?? null,
+            ])
+                ->filter()
+                ->implode(' · ');
+        })
+        ->filter()
+        ->implode(' || ');
 }
 
 
+private function exportFilename(Request $request): string
+{
+    $session = trim((string) $request->query('acad_session_name', ''));
+    $ptype   = trim((string) $request->query('program_type_name', ''));
+    $appType = trim((string) $request->query('application_type_name', ''));
+    $faculty = trim((string) $request->query('faculty_name', ''));
+    $dept    = trim((string) $request->query('department_name', ''));
+    $program = trim((string) $request->query('program_name', ''));
+
+    $parts = [];
+
+    if ($session !== '') {
+        $parts[] = $session;
+    }
+
+    if ($faculty !== '') {
+        $parts[] = $faculty;
+    } elseif ($ptype !== '') {
+        $parts[] = $ptype;
+    }
+
+    if ($dept !== '') {
+        $parts[] = $dept;
+    }
+
+    if ($program !== '') {
+        $parts[] = $program;
+    }
+
+    if ($appType !== '') {
+        $parts[] = $appType;
+    }
+
+    if (empty($parts)) {
+        $parts[] = 'Candidate-List';
+    }
+
+    return collect($parts)
+        ->map(fn ($part) => Str::slug($part))
+        ->filter()
+        ->implode('_');
+}
 
 
 }

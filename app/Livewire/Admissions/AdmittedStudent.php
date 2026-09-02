@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\Admissions;
 
-use Livewire\Component;
 use App\Services\Clients\AdmissionsPortalClient;
 use App\Services\Clients\StudentPortalClient;
-use Spatie\SimpleExcel\SimpleExcelWriter;
+use App\Services\ProgramTypeAccessService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Livewire\Component;
+use Spatie\SimpleExcel\SimpleExcelWriter;
 
 
 class AdmittedStudent extends Component
@@ -467,8 +468,21 @@ public function showFilters()
 }
 
 
+protected function programTypeAccess(): ProgramTypeAccessService
+{
+    return app(ProgramTypeAccessService::class);
+}
+
+public function getAvailableProgramTypesProperty(): array
+{
+    return $this->programTypeAccess()
+        ->filterArray($this->programTypes);
+}
+
+
+
 public function render()
 {
-return view('livewire.admitted-student');
+return view('livewire.admissions.admitted-student');
 }
 }
