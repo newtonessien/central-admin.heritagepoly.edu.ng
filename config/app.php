@@ -105,6 +105,11 @@ return [
         ),
     ],
 
+        'student_portal_url' => rtrim(
+    preg_replace('#/api/v1/?$#', '', env('STUDENT_PORTAL_URL')),
+    '/'
+      ),
+
     /*
     |--------------------------------------------------------------------------
     | Maintenance Mode Driver

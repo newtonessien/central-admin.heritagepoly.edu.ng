@@ -2,12 +2,14 @@
 
 namespace App\Livewire\Admissions;
 
+use App\Mail\AdmissionNotification;
 use App\Services\AdmissionAuditService;
 use App\Services\Clients\AdmissionsPortalClient;
 use App\Services\Clients\StudentPortalClient;
 use App\Services\ProgramTypeAccessService;
 use Flux\Flux;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -1261,15 +1263,27 @@ protected function admitCandidate(int $candidateId): void
     |
     */
 
-    $result = $this->processAdmission($candidateId);
+    $this->processAdmission($candidateId);
 
     /*
     |--------------------------------------------------------------------------
-    | Refresh UI
+    | Admission successful — close decision modal
     |--------------------------------------------------------------------------
+    |
+    | processingDecision is still true here, so we must reset it BEFORE
+    | calling closeDecisionModal().
+    |
     */
 
+    $this->processingDecision = false;
+
     $this->closeDecisionModal();
+
+    /*
+    |--------------------------------------------------------------------------
+    | Refresh candidates
+    |--------------------------------------------------------------------------
+    */
 
     $this->fetchCandidates();
 
@@ -1286,7 +1300,6 @@ protected function admitCandidate(int $candidateId): void
         duration: 5000
     );
 }
-
 
 
 protected function buildAdmissionPayload(array $candidate): array
@@ -1673,27 +1686,25 @@ protected function clearSelection(): void
     $this->showBulkAdmissionConfirm = true;
 }
 
+
+
 protected function processAdmission(int $candidateId): array
 {
-    $admissions = app(AdmissionsPortalClient::class);
+    $admissions   = app(AdmissionsPortalClient::class);
     $studentPortal = app(StudentPortalClient::class);
-    $audit = app(AdmissionAuditService::class);
+    $audit         = app(AdmissionAuditService::class);
 
     /*
     |--------------------------------------------------------------------------
-    | 1. Retrieve authoritative candidate data
+    | 1. Get candidate
     |--------------------------------------------------------------------------
-    |
-    | Always retrieve the latest candidate from the Admissions Portal.
-    | Do not rely on the candidate currently displayed in the browser.
-    |
     */
 
     $candidate = $admissions->candidateForMigration($candidateId);
 
     if (!$candidate) {
         throw new \RuntimeException(
-            "Candidate {$candidateId} could not be retrieved."
+            "Candidate {$candidateId} was not found."
         );
     }
 
@@ -1703,7 +1714,7 @@ protected function processAdmission(int $candidateId): array
     |--------------------------------------------------------------------------
     */
 
-    if ((bool) ($candidate['is_admitted'] ?? false)) {
+    if (($candidate['is_admitted'] ?? false) === true) {
         throw new \RuntimeException(
             "Candidate {$candidate['regno']} is already admitted."
         );
@@ -1717,40 +1728,15 @@ protected function processAdmission(int $candidateId): array
 
     $payload = $this->buildAdmissionPayload($candidate);
 
-    Log::info(
-        'Admission Processing → Student Portal migration',
-        [
-            'candidate_id'   => $candidateId,
-            'regno'          => $candidate['regno'] ?? null,
-            'program_type_id'=> $candidate['program_type_id'] ?? null,
-            'program_id'     => $candidate['program_id'] ?? null,
-            'faculty_id'     => $candidate['faculty_id'] ?? null,
-            'department_id'  => $candidate['department_id'] ?? null,
-            'session_id'     => $candidate['acad_session_id'] ?? null,
-        ]
-    );
-
     /*
     |--------------------------------------------------------------------------
     | 4. Migrate to Student Portal
     |--------------------------------------------------------------------------
-    |
-    | This MUST succeed before the Admissions Portal is marked admitted.
-    |
     */
 
     $studentResult = $studentPortal->migrateAdmission($payload);
 
     if (($studentResult['status'] ?? null) !== 'success') {
-
-        Log::error(
-            'Admission Processing → Student Portal migration failed',
-            [
-                'candidate_id' => $candidateId,
-                'regno'        => $candidate['regno'] ?? null,
-                'response'     => $studentResult,
-            ]
-        );
 
         throw new \RuntimeException(
             $this->extractApiError(
@@ -1765,26 +1751,11 @@ protected function processAdmission(int $candidateId): array
     |--------------------------------------------------------------------------
     | 5. Commit admission in Admissions Portal
     |--------------------------------------------------------------------------
-    |
-    | Only execute this after Student Portal migration succeeds.
-    |
     */
 
     $commitResult = $admissions->commitAdmission($candidateId);
 
     if (($commitResult['status'] ?? null) !== 'success') {
-
-        /*
-        |--------------------------------------------------------------------------
-        | CRITICAL STATE
-        |--------------------------------------------------------------------------
-        |
-        | Student Portal now contains the student, but Admissions Portal
-        | did not commit the admission.
-        |
-        | Do NOT attempt to silently continue.
-        |
-        */
 
         Log::critical(
             'Student Portal migration succeeded but Admissions commit failed',
@@ -1809,14 +1780,6 @@ protected function processAdmission(int $candidateId): array
     |--------------------------------------------------------------------------
     | 6. Admission Audit
     |--------------------------------------------------------------------------
-    |
-    | At this point:
-    |
-    |   Student Portal migration = SUCCESS
-    |   Admissions commit        = SUCCESS
-    |
-    | Therefore the admission is complete.
-    |
     */
 
     $audit->record(
@@ -1834,37 +1797,185 @@ protected function processAdmission(int $candidateId): array
     );
 
     /*
+    |--------------------------------------------------------------------------
+    | 7. Resolve Academic Context
+    |--------------------------------------------------------------------------
+    |
+    | candidateForMigration() gives us the academic IDs.
+    | The notification needs the corresponding names.
+    |
+    */
+
+    $academicContext  = $this->buildAcademicContext(
+        $candidate
+    );
+
+
+    /*
 |--------------------------------------------------------------------------
-| Close modal
+| 8. Send Admission Notification
 |--------------------------------------------------------------------------
+|
+| Email failure must NOT undo a successful admission.
+|
 */
 
-$this->processingDecision = false;
-$this->showDecisionModal = false;
-Flux::modal('admission-decision')->close();
-$this->processingCandidate = null;
-$this->admissionDecision = '';
-$this->decisionReason = '';
+$email = data_get(
+    $candidate,
+    'user.email'
+);
+
+if ($email) {
+
+    try {
+
+        Mail::to($email)->send(
+            new AdmissionNotification(
+                $candidate,
+                $academicContext
+            )
+        );
+
+        Log::info(
+            'Admission notification sent',
+            [
+                'candidate_id' =>
+                    $candidate['id'] ?? null,
+
+                'regno' =>
+                    $candidate['regno'] ?? null,
+
+                'email' =>
+                    $email,
+            ]
+        );
+
+    } catch (\Throwable $mailException) {
+
+        Log::error(
+            'Admission notification failed',
+            [
+                'candidate_id' =>
+                    $candidate['id'] ?? null,
+
+                'regno' =>
+                    $candidate['regno'] ?? null,
+
+                'email' =>
+                    $email,
+
+                'error' =>
+                    $mailException->getMessage(),
+            ]
+        );
+    }
+
+} else {
+
+    Log::warning(
+        'Admission notification skipped: candidate has no email',
+        [
+            'candidate_id' =>
+                $candidate['id'] ?? null,
+
+            'regno' =>
+                $candidate['regno'] ?? null,
+        ]
+    );
+}
+
+
 
     /*
     |--------------------------------------------------------------------------
-    | 7. Return result
+    | 9. Return result
     |--------------------------------------------------------------------------
-    |
-    | Do not refresh the UI here.
-    | Do not close a modal here.
-    | Do not display a toast here.
-    |
-    | This method is also used by bulk admission.
-    |
     */
 
     return [
         'status'      => 'success',
         'candidate_id' => $candidateId,
-        'regno'       => $candidate['regno'] ?? null,
+        'regno'        => $candidate['regno'] ?? null,
     ];
 }
+
+protected function buildAcademicContext(array $candidate): array
+{
+    $admissions = app(AdmissionsPortalClient::class);
+
+    $programTypeId = (int) ($candidate['program_type_id'] ?? 0);
+    $facultyId     = (int) ($candidate['faculty_id'] ?? 0);
+    $departmentId  = (int) ($candidate['department_id'] ?? 0);
+    $programId     = (int) ($candidate['program_id'] ?? 0);
+    $sessionId     = (int) ($candidate['acad_session_id'] ?? 0);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Programme Type
+    |--------------------------------------------------------------------------
+    */
+
+    $programType = collect($this->programTypes)
+        ->firstWhere('id', $programTypeId);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Faculty
+    |--------------------------------------------------------------------------
+    */
+
+    $faculty = collect($this->faculties)
+        ->firstWhere('id', $facultyId);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Department
+    |--------------------------------------------------------------------------
+    */
+
+    $departments = $admissions->getDepartments($facultyId);
+
+    $department = collect($departments)
+        ->firstWhere('id', $departmentId);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Programme
+    |--------------------------------------------------------------------------
+    */
+
+    $programs = $admissions->getPrograms(
+        $departmentId,
+        $programTypeId
+    );
+
+    $program = collect($programs)
+        ->firstWhere('id', $programId);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Academic Session
+    |--------------------------------------------------------------------------
+    */
+
+    $session = collect($this->acadSessions)
+        ->firstWhere('id', $sessionId);
+
+    return [
+        'program_type' => $programType['name'] ?? null,
+        'faculty'      => $faculty['name'] ?? null,
+        'department'   => $department['name'] ?? null,
+        'program'      => $program['name'] ?? null,
+        'session'      => $session['name'] ?? null,
+
+        'program_type_id' => $programTypeId,
+        'faculty_id'      => $facultyId,
+        'department_id'   => $departmentId,
+        'program_id'      => $programId,
+        'acad_session_id' => $sessionId,
+    ];
+}
+
 
 public function getSelectedCandidateCountProperty(): int
 {
@@ -2331,6 +2442,33 @@ public function getAvailableProgramTypesProperty(): array
 {
     return $this->programTypeAccess()
         ->filterArray($this->programTypes);
+}
+
+
+protected function extractApiError(mixed $error): string
+{
+    if (is_string($error) && $error !== '') {
+        return $error;
+    }
+
+    if (is_array($error)) {
+        if (isset($error['message']) && is_string($error['message'])) {
+            return $error['message'];
+        }
+
+        if (isset($error['error']) && is_string($error['error'])) {
+            return $error['error'];
+        }
+
+        return json_encode($error, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+            ?: 'An unknown API error occurred.';
+    }
+
+    if ($error instanceof \Throwable) {
+        return $error->getMessage();
+    }
+
+    return 'An unknown API error occurred.';
 }
 
 

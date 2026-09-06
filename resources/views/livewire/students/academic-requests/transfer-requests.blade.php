@@ -1,5 +1,5 @@
 <flux:card>
-<flux:heading size="lg">Intra-University Transfer Requests</flux:heading>
+<flux:heading size="lg">Intra-Polytechnic Transfer Requests</flux:heading>
 
 <flux:table class="mt-4">
 
