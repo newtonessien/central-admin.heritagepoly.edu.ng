@@ -20,7 +20,7 @@ class CourseMatchingService
     public function __construct()
     {
         $programs = Program::query()
-            ->where('program_type_id', 1)
+            ->where('program_type_id', 2)
             ->where('is_visible', 1)
             ->get();
 

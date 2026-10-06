@@ -74,7 +74,7 @@ class JambMappingService
     ): JambProgramMapping {
 
         $program = Program::query()
-            ->where('program_type_id', 1)
+            ->where('program_type_id', 2)
             ->where('is_visible', 1)
             ->findOrFail($programId);
 
@@ -132,7 +132,7 @@ class JambMappingService
     {
         return Program::query()
             ->with('department')
-            ->where('program_type_id', 1)
+            ->where('program_type_id', 2)
             ->where('is_visible', 1)
             ->orderBy('name')
             ->get([

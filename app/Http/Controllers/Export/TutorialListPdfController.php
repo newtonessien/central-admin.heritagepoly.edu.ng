@@ -11,10 +11,16 @@ class TutorialListPdfController
 {
     public function generate(Request $request)
     {
+        // -------------------------------------------------
+        // 1. VALIDATION
+        // -------------------------------------------------
+
         $validated = $request->validate([
             'course_id'       => 'required|integer',
             'acad_session_id' => 'required|integer',
-            'semester'        => 'required|integer',
+            'semester'        => 'required|integer|in:1,2',
+            'academic_period' => 'required|integer|in:1,2,3',
+
             'program_type_id' => 'nullable|integer',
             'faculty_id'      => 'nullable|integer',
             'department_id'   => 'nullable|integer',
@@ -22,64 +28,121 @@ class TutorialListPdfController
             'level_id'        => 'nullable|integer',
         ]);
 
+        // -------------------------------------------------
+        // 2. LOAD TUTORIAL LIST
+        // -------------------------------------------------
+
         $validated['export'] = 1;
 
         $client = app(StudentPortalClient::class);
+
         $response = $client->getTutorialList($validated);
 
         $students = $response['students'] ?? [];
         $course   = $response['course'] ?? [];
-        // Get structural names
-    $admissions = app(AdmissionsPortalClient::class);
 
-// Load lists
-$programTypes = $admissions->getProgramTypes();
-$faculties   = $admissions->getFaculties();
-$departments = $validated['faculty_id']
-                    ? $admissions->getDepartments($validated['faculty_id'])
-                    : [];
+        // -------------------------------------------------
+        // 3. LOAD STRUCTURAL NAMES
+        // -------------------------------------------------
 
-$programs    = $validated['department_id']
-                    ? $admissions->getPrograms(
-                        $validated['department_id'],
-                        $validated['program_type_id']
-                    )
-                    : [];
+        $admissions = app(AdmissionsPortalClient::class);
 
-$sessions    = $admissions->getAcadSessions();
+        $programTypes = $admissions->getProgramTypes();
 
-// Extract single records
-$faculty = collect($faculties)
-                ->firstWhere('id', $validated['faculty_id'] ?? null);
+        $faculties = $admissions->getFaculties();
 
-$department = collect($departments)
-                ->firstWhere('id', $validated['department_id'] ?? null);
+        $departments = $validated['faculty_id']
+            ? $admissions->getDepartments(
+                $validated['faculty_id']
+            )
+            : [];
 
-$program = collect($programs)
-                ->firstWhere('id', $validated['program_id'] ?? null);
+        $programs = $validated['department_id']
+            ? $admissions->getPrograms(
+                $validated['department_id'],
+                $validated['program_type_id']
+            )
+            : [];
 
-$session = collect($sessions)
-                ->firstWhere('id', $validated['acad_session_id'] ?? null);
+        $sessions = $admissions->getAcadSessions();
 
-$programType = collect($programTypes)
-                ->firstWhere('id', $validated['program_type_id'] ?? null);
+        // -------------------------------------------------
+        // 4. EXTRACT SELECTED RECORDS
+        // -------------------------------------------------
 
- // Convert semester
-$semesterText = match((int)$validated['semester']) {
-    1 => 'First Semester',
-    2 => 'Second Semester',
-    default => '—'
-};
+        $faculty = collect($faculties)
+            ->firstWhere(
+                'id',
+                $validated['faculty_id'] ?? null
+            );
 
-$semesterSlug = str_replace(' ', '', $semesterText);
-$courseCode = $course['course_code'] ?? 'COURSE';
-$courseCode = preg_replace('/\s+/', '', $courseCode);
-$date = now()->format('Y-m-d');
-$filename = "{$courseCode}_{$semesterSlug}_{$date}.pdf";
+        $department = collect($departments)
+            ->firstWhere(
+                'id',
+                $validated['department_id'] ?? null
+            );
 
+        $program = collect($programs)
+            ->firstWhere(
+                'id',
+                $validated['program_id'] ?? null
+            );
 
+        $session = collect($sessions)
+            ->firstWhere(
+                'id',
+                $validated['acad_session_id'] ?? null
+            );
 
-$totalStudents = count($students);
+        $programType = collect($programTypes)
+            ->firstWhere(
+                'id',
+                $validated['program_type_id'] ?? null
+            );
+
+        // -------------------------------------------------
+        // 5. SEMESTER TEXT
+        // -------------------------------------------------
+
+        $semesterText = match ((int) $validated['semester']) {
+            1 => 'First Semester',
+            2 => 'Second Semester',
+            default => '—',
+        };
+
+        // -------------------------------------------------
+        // 6. ACADEMIC PERIOD TEXT
+        // -------------------------------------------------
+
+        $academicPeriodText = match ((int) $validated['academic_period']) {
+            1 => 'First Semester',
+            2 => 'Second Semester',
+            3 => 'Summer',
+            default => '—',
+        };
+
+        // -------------------------------------------------
+        // 7. FILE NAME
+        // -------------------------------------------------
+
+        $courseCode = $course['course_code'] ?? 'COURSE';
+
+        $courseCode = preg_replace('/\s+/', '', $courseCode);
+
+        $date = now()->format('Y-m-d');
+
+        $filename =
+            "{$courseCode}_{$semesterText}_{$academicPeriodText}_{$date}.pdf";
+
+        // -------------------------------------------------
+        // 8. TOTAL STUDENTS
+        // -------------------------------------------------
+
+        $totalStudents = count($students);
+
+        // -------------------------------------------------
+        // 9. GENERATE PDF
+        // -------------------------------------------------
 
         $pdf = Pdf::loadView(
             'exports.tutorial-list',
@@ -92,6 +155,7 @@ $totalStudents = count($students);
                 'programType',
                 'session',
                 'semesterText',
+                'academicPeriodText',
                 'totalStudents'
             )
         )->setPaper('a4', 'landscape');

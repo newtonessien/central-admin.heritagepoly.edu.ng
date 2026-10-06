@@ -18,6 +18,8 @@ class TutorialList extends Component
     public ?int $program_id      = null;
 
     public ?int $semester        = null;
+
+    public ?int $academic_period = null;
     public ?int $level_id        = null;   // Course level
     public ?int $course_id       = null;
     public ?int $acad_session_id = null;
@@ -90,6 +92,7 @@ class TutorialList extends Component
         $this->department_id = null;
         $this->program_id = null;
         $this->semester = null;
+        $this->academic_period = null;
         $this->level_id = null;
         $this->course_id = null;
 
@@ -111,6 +114,7 @@ class TutorialList extends Component
     {
         $this->program_id = null;
         $this->semester = null;
+        $this->academic_period = null;
         $this->level_id = null;
         $this->course_id = null;
 
@@ -133,6 +137,7 @@ class TutorialList extends Component
     public function updatedProgramId(): void
     {
         $this->semester = null;
+        $this->academic_period = null;
         $this->level_id = null;
         $this->course_id = null;
         $this->courses = [];
@@ -194,6 +199,7 @@ class TutorialList extends Component
             'course_id'       => 'required',
             'acad_session_id' => 'required',
             'semester'        => 'required',
+            'academic_period' => 'required',
             'level_id'        => 'required',
         ]);
 
@@ -205,6 +211,7 @@ class TutorialList extends Component
                     'course_id'       => $this->course_id,
                     'acad_session_id' => $this->acad_session_id,
                     'semester'        => $this->semester,
+                    'academic_period' => $this->academic_period,
                     'program_type_id' => $this->program_type_id,
                     'faculty_id'      => $this->faculty_id,
                     'department_id'   => $this->department_id,

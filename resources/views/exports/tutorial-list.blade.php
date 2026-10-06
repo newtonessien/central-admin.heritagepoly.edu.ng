@@ -39,20 +39,36 @@ background: #f2f2f2;
 }
 
 .summary {
-margin-top: 5px;
+margin-top: 15px;
 }
 
-.signature {
-margin-top: 40px;
-width: 35%;
-border-top: 1px solid #000;
-}
 
 .page-number {
 position: fixed;
 bottom: 0;
 right: 0;
 font-size: 9px;
+}
+
+.signature-table {
+    width: 100%;
+    border: none !important;
+    border-collapse: collapse;
+    margin-top: 55px;
+}
+
+.signature-table td {
+    width: 50%;
+    border: none !important;
+    text-align: center;
+    padding: 0 40px;
+}
+
+.signature-line {
+    width: 70%;
+    margin: 0 auto 5px auto;
+    border-top: 1px solid #000;
+    height: 1px;
 }
 </style>
 </head>
@@ -88,7 +104,8 @@ font-size: 9px;
 {{ $course['course_code'] ?? '' }} -
 {{ $course['course_title'] ?? '' }} ({{ $course['credit_hours'] ?? '' }}) <br>
 
-<strong>Semester:</strong> {{ $semesterText }} <br>
+<strong>Semester/Academic Period:</strong> {{ $semesterText }} / {{ $academicPeriodText }} <br>
+{{-- <strong>Academic Period:</strong> {{ $academicPeriodText }} <br> --}}
 <strong>Session:</strong> {{ $session['name'] ?? '' }} <br>
 <strong>Total Students:</strong> {{ $totalStudents }}
 </td>
@@ -130,113 +147,88 @@ font-size: 9px;
 </table>
 </div>
 
+
 {{-- GRADE SUMMARY --}}
 <div class="summary">
-<h4>Grade Summary</h4>
-<table>
-<tr>
-<th>A</th>
-<th>B</th>
-<th>C</th>
-<th>D</th>
-<th>E</th>
-<th>F</th>
-<th>Total</th>
-</tr>
-<tr>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-</tr>
-</table>
+
+    <h4 style="margin: 0 0 8px 0;">
+        Grade Summary
+    </h4>
+
+    <table>
+        <tr>
+            <th>A</th>
+            <th>B</th>
+            <th>C</th>
+            <th>D</th>
+            <th>E</th>
+            <th>F</th>
+            <th>Total</th>
+        </tr>
+
+        <tr>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+        </tr>
+    </table>
+
 </div>
 
-{{-- SIGNATURE --}}
-{{-- <div class="signature">
-Course Lecturer Signature
-</div> --}}
-
-{{-- <table style="width:100%; margin-top:60px;">
+{{-- SIGNATURES --}}
+<table class="signature-table">
     <tr>
-        <td style="width:50%; text-align:left;">
-            <div style="width:70%; border-top:1px solid #000; padding-top:5px;">
-                Course Lecturer Signature
-            </div>
+        <td>
+            <div class="signature-line"></div>
+            <strong>Course Lecturer Signature</strong>
         </td>
 
-        <td style="width:50%; text-align:right;">
-            <div style="width:70%; margin-left:auto; border-top:1px solid #000; padding-top:5px;">
-                HOD's Signature
-            </div>
+        <td>
+            <div class="signature-line"></div>
+            <strong>HOD's Signature</strong>
         </td>
     </tr>
-</table> --}}
+</table>
 
-{{-- PAGE NUMBER --}}
-{{-- <script type="text/php">
-if (isset($pdf)) {
-$pdf->page_text(
-770, 570,
-"Page {PAGE_NUM} of {PAGE_COUNT}",
-null, 8
-);
-}
-</script> --}}
+
 
 <script type="text/php">
 if (isset($pdf)) {
 
     $font = $fontMetrics->get_font("helvetica", "normal");
-    $boldFont   = $fontMetrics->get_font("helvetica", "bold");
-    $size = 9;
+    $boldFont = $fontMetrics->get_font("helvetica", "bold");
 
     $pageWidth  = $pdf->get_width();
     $pageHeight = $pdf->get_height();
 
-    $y = $pageHeight - 80;
-
-    // Black color
     $color = array(0, 0, 0);
 
-    // LEFT SIGNATURE LINE
-    $pdf->line(60, $y, 260, $y, $color, 1);
 
-    $pdf->page_text(
-        100,
-        $y + 5,
-        "Course Lecturer Signature",
-        $boldFont,
-        $size
-    );
+    /*
+    |--------------------------------------------------------------------------
+    | FOOTER
+    |--------------------------------------------------------------------------
+    */
 
-    // RIGHT SIGNATURE LINE
-    $pdf->line($pageWidth - 260, $y, $pageWidth - 60, $y, $color, 1);
+    $footerY = $pageHeight - 20;
 
-    $pdf->page_text(
-        $pageWidth - 220,
-        $y + 5,
-        "HOD's Signature",
-        $boldFont,
-        $size
-    );
-
-    // TIMESTAMP (Left Footer)
+    // Generated timestamp
     $pdf->page_text(
         40,
-        $pageHeight - 40,
+        $footerY,
         "Generated on: {{ now()->format('d M Y, h:i A') }}",
         $font,
         8
     );
 
-    // PAGINATION (Right Footer)
+    // Page number
     $pdf->page_text(
         $pageWidth - 120,
-        $pageHeight - 40,
+        $footerY,
         "Page {PAGE_NUM} of {PAGE_COUNT}",
         $font,
         8

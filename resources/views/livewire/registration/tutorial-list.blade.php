@@ -15,6 +15,7 @@
         'course_id'       => $course_id,
         'acad_session_id' => $acad_session_id,
         'semester'        => $semester,
+        'academic_period' => $academic_period,
         'program_type_id' => $program_type_id,
         'faculty_id'      => $faculty_id,
         'department_id'   => $department_id,
@@ -52,12 +53,13 @@
         </div>
     </div>
 
-    {{-- =========================================
-        FILTER SECTION
-    ========================================== --}}
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+  {{-- =========================================
+    FILTER SECTION
+========================================== --}}
+<div class="grid grid-cols-1 md:grid-cols-12 gap-4">
 
-        {{-- Program Type --}}
+    {{-- Program Type --}}
+    <div class="md:col-span-3">
         <flux:select
             wire:model.live.number="program_type_id"
             label="Program Type"
@@ -71,8 +73,10 @@
                 </flux:select.option>
             @endforeach
         </flux:select>
+    </div>
 
-        {{-- Faculty --}}
+    {{-- Faculty --}}
+    <div class="md:col-span-3">
         <flux:select
             wire:model.live.number="faculty_id"
             label="Faculty"
@@ -86,8 +90,10 @@
                 </flux:select.option>
             @endforeach
         </flux:select>
+    </div>
 
-        {{-- Department --}}
+    {{-- Department --}}
+    <div class="md:col-span-3">
         <flux:select
             wire:model.live.number="department_id"
             label="Department"
@@ -102,8 +108,10 @@
                 </flux:select.option>
             @endforeach
         </flux:select>
+    </div>
 
-        {{-- Program --}}
+    {{-- Program --}}
+    <div class="md:col-span-3">
         <flux:select
             wire:model.live.number="program_id"
             label="Program"
@@ -118,15 +126,18 @@
                 </flux:select.option>
             @endforeach
         </flux:select>
-
     </div>
 
-    {{-- =========================================
-        SECOND ROW FILTERS
-    ========================================== --}}
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+</div>
 
-        {{-- Academic Session --}}
+
+{{-- =========================================
+    SECOND ROW FILTERS
+========================================== --}}
+<div class="grid grid-cols-1 md:grid-cols-12 gap-4 mt-4">
+
+    {{-- Academic Session --}}
+    <div class="md:col-span-3">
         <flux:select
             wire:model.live.number="acad_session_id"
             label="Academic Session"
@@ -140,20 +151,52 @@
                 </flux:select.option>
             @endforeach
         </flux:select>
+    </div>
 
-        {{-- Semester --}}
+    {{-- Semester --}}
+    <div class="md:col-span-2">
         <flux:select
             wire:model.live.number="semester"
             label="Semester"
             variant="listbox"
             :disabled="!$program_id"
-            placeholder="- Select Semester -"
+            placeholder="- Select -"
         >
-            <flux:select.option value="1">First Semester</flux:select.option>
-            <flux:select.option value="2">Second Semester</flux:select.option>
-        </flux:select>
+            <flux:select.option value="1">
+                First Semester
+            </flux:select.option>
 
-        {{-- Course Level --}}
+            <flux:select.option value="2">
+                Second Semester
+            </flux:select.option>
+        </flux:select>
+    </div>
+
+    {{-- Academic Period --}}
+    <div class="md:col-span-2">
+        <flux:select
+            wire:model.live.number="academic_period"
+            label="Academic Period"
+            variant="listbox"
+            :disabled="!$semester"
+            placeholder="- Select -"
+        >
+            <flux:select.option value="1">
+                First Semester
+            </flux:select.option>
+
+            <flux:select.option value="2">
+                Second Semester
+            </flux:select.option>
+
+            <flux:select.option value="3">
+                Summer
+            </flux:select.option>
+        </flux:select>
+    </div>
+
+    {{-- Course Level --}}
+    <div class="md:col-span-2">
         <flux:select
             wire:model.live.number="level_id"
             label="Course Level"
@@ -167,8 +210,10 @@
                 </flux:select.option>
             @endforeach
         </flux:select>
+    </div>
 
-        {{-- Course --}}
+    {{-- Course --}}
+    <div class="md:col-span-3">
         <flux:select
             wire:model.live.number="course_id"
             label="Course"
@@ -183,8 +228,9 @@
                 </flux:select.option>
             @endforeach
         </flux:select>
-
     </div>
+
+</div>
 
     {{-- =========================================
         LOAD BUTTON

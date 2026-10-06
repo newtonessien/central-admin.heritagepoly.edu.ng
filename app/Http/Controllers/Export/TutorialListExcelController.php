@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Export;
 
 use Illuminate\Http\Request;
 use App\Services\Clients\StudentPortalClient;
-//use App\Services\Clients\AdmissionsPortalClient;
 use Spatie\SimpleExcel\SimpleExcelWriter;
 
 class TutorialListExcelController
@@ -14,7 +13,9 @@ class TutorialListExcelController
         $validated = $request->validate([
             'course_id'       => 'required|integer',
             'acad_session_id' => 'required|integer',
-            'semester'        => 'required|integer',
+            'semester'        => 'required|integer|in:1,2',
+            'academic_period' => 'required|integer|in:1,2,3',
+
             'program_type_id' => 'nullable|integer',
             'faculty_id'      => 'nullable|integer',
             'department_id'   => 'nullable|integer',
@@ -22,36 +23,62 @@ class TutorialListExcelController
             'level_id'        => 'nullable|integer',
         ]);
 
+        // Tell the API this is an export request
         $validated['export'] = 1;
 
-        $client   = app(StudentPortalClient::class);
+        $client = app(StudentPortalClient::class);
+
         $response = $client->getTutorialList($validated);
 
         $students = $response['students'] ?? [];
         $course   = $response['course'] ?? [];
 
-        // Semester
-        $semesterText = match((int)$validated['semester']) {
+        // -------------------------------------------------
+        // SEMESTER
+        // -------------------------------------------------
+
+        $semesterText = match ((int) $validated['semester']) {
             1 => 'First Semester',
             2 => 'Second Semester',
-            default => '—'
+            default => '—',
         };
 
-        $semesterSlug = str_replace(' ', '', $semesterText);
+        // -------------------------------------------------
+        // ACADEMIC PERIOD
+        // -------------------------------------------------
+
+        $academicPeriodText = match ((int) $validated['academic_period']) {
+            1 => 'First Semester',
+            2 => 'Second Semester',
+            3 => 'Summer',
+            default => '—',
+        };
+
+        // -------------------------------------------------
+        // FILE NAME
+        // -------------------------------------------------
 
         $courseCode = $course['course_code'] ?? 'COURSE';
+
+        // Remove spaces
         $courseCode = preg_replace('/\s+/', '', $courseCode);
 
         $date = now()->format('Y-m-d');
 
-        $filename = "{$courseCode}_{$semesterSlug}_{$date}.xlsx";
+        $filename = "{$courseCode}_{$semesterText}_{$academicPeriodText}_{$date}.xlsx";
 
-        // Create temporary file
+        // -------------------------------------------------
+        // CREATE TEMPORARY FILE
+        // -------------------------------------------------
+
         $tempPath = storage_path("app/{$filename}");
 
         $writer = SimpleExcelWriter::create($tempPath);
 
-        // Header row (like your table headers)
+        // -------------------------------------------------
+        // HEADER
+        // -------------------------------------------------
+
         $writer->addRow([
             '#',
             'Reg. Number',
@@ -64,8 +91,12 @@ class TutorialListExcelController
             'Remark',
         ]);
 
-        // Students
+        // -------------------------------------------------
+        // STUDENTS
+        // -------------------------------------------------
+
         foreach ($students as $index => $student) {
+
             $writer->addRow([
                 $index + 1,
                 $student['matric_no'] ?? '',
@@ -81,6 +112,8 @@ class TutorialListExcelController
 
         $writer->close();
 
-        return response()->download($tempPath)->deleteFileAfterSend(true);
+        return response()
+            ->download($tempPath)
+            ->deleteFileAfterSend(true);
     }
 }
