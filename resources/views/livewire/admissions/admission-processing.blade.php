@@ -613,13 +613,16 @@ $applicationType = $candidate['application_type']
 ?? $candidate['application_type_name']
 ?? '';
 
+
 $isAdmitted = (bool) (
-$candidate['is_admitted']
-?? false
+    $candidate['is_admitted'] ?? false
 );
 
-$status = $candidate['status']
-?? ($isAdmitted ? 'admitted' : 'pending');
+// Admission flag takes precedence over status.
+$status = $isAdmitted
+    ? 'admitted'
+    : ($candidate['status'] ?? 'pending');
+
 @endphp
 
 <tr class="transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
